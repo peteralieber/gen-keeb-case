@@ -1,0 +1,2 @@
+# Requirements for gen-keeb-case proof of concept
+# No external dependencies needed for basic POC - uses only standard library
