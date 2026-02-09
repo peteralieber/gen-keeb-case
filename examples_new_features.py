@@ -74,7 +74,7 @@ def example_2_split_keyboard_unified():
 
 def example_3_split_with_both_halves_copy():
     """Example 3: Split keyboard with custom keys copied to both halves."""
-    print("\nExample 3: Split keyboard with copied custom keys...")
+    print("\nExample 3: Split keyboard with copied custom keys (separate halves)...")
     
     spacing = 19.05
     
@@ -93,13 +93,14 @@ def example_3_split_with_both_halves_copy():
     for row in range(4):
         for col in range(5):
             right_keys.append({
-                'x': (col + 7) * spacing,
+                'x': col * spacing,
                 'y': row * spacing,
                 'half': 'right'
             })
     
     # Custom thumb keys that will be copied to both halves
     # Using 'both' with mirror=False means same position on each half
+    # This works best with separate_halves=True where each half has its own coordinate system
     thumb_keys = [
         {'x': spacing * 1.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'both', 'mirror': False},
         {'x': spacing * 2.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'both', 'mirror': False},
@@ -109,12 +110,12 @@ def example_3_split_with_both_halves_copy():
         switch_type_name="cherry_mx",
         custom_keys=left_keys + right_keys + thumb_keys,
         split=True,
-        split_distance=spacing * 2
+        split_distance=spacing * 2,
+        separate_halves=True  # Best for copy mode
     )
     
     generator = CaseGenerator(layout=layout)
     generator.save("examples/split_keyboard_copied_thumbs.scad")
-    generator.save_svg("examples/split_keyboard_copied_thumbs.svg")
     print(f"  Generated with {len(layout.custom_keys)} keys (includes copied thumbs)")
 
 

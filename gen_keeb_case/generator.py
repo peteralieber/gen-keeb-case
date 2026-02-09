@@ -435,7 +435,10 @@ class CaseGenerator:
         svg_lines = []
         svg_lines.append(f'<?xml version="1.0" encoding="UTF-8"?>')
         svg_lines.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width:.2f}mm" height="{svg_height:.2f}mm" viewBox="0 0 {svg_width:.2f} {svg_height:.2f}">')
-        svg_lines.append(f'  <title>Keyboard Case Top View - {self.layout.rows}x{self.layout.cols}</title>')
+        if self.layout.rows and self.layout.cols:
+            svg_lines.append(f'  <title>Keyboard Case Top View - {self.layout.rows}x{self.layout.cols}</title>')
+        else:
+            svg_lines.append(f'  <title>Keyboard Case Top View - Custom Layout</title>')
         svg_lines.append(f'  <desc>Generated keyboard case layout for {self.layout.switch_type.name} switches</desc>')
         svg_lines.append('')
         
