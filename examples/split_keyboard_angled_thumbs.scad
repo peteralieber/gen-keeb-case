@@ -1,14 +1,14 @@
 // Generated keyboard case
-// Layout: 3x10
-// Switch type: Kailh Choc
+// Layout: Custom (40 keys)
+// Switch type: Cherry MX
 
 // Parameters
-case_width = 202.45;
-case_height = 69.10;
+case_width = 279.25;
+case_height = 94.47;
 case_depth = 18.00;
 wall_thickness = 3.00;
 base_height = 10.00;
-switch_cutout_size = 13.80;
+switch_cutout_size = 14.00;
 key_spacing = 19.05;
 
 module keyboard_case() {
@@ -42,14 +42,6 @@ module switch_plate() {
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([95.25, 0.00, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([114.30, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([152.40, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([171.45, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([0.00, 19.05, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([19.05, 19.05, 0])
@@ -61,14 +53,6 @@ module switch_plate() {
     translate([76.20, 19.05, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([95.25, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([114.30, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([152.40, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([171.45, 19.05, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([0.00, 38.10, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
@@ -82,14 +66,58 @@ module switch_plate() {
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([95.25, 38.10, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([114.30, 38.10, 0])
+    translate([28.58, 60.96, 0])
+        rotate([0, 0, -15.00])
+            translate([-7.00, -7.00, 0])
+                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([47.62, 62.87, 0])
+        rotate([0, 0, -10.00])
+            translate([-7.00, -7.00, 0])
+                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([152.40, 0.00, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 38.10, 0])
+    translate([171.45, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([190.50, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([209.55, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([228.60, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([247.65, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([152.40, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([171.45, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([190.50, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([209.55, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([228.60, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([247.65, 19.05, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([152.40, 38.10, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([171.45, 38.10, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([190.50, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([209.55, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([228.60, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([247.65, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([219.07, 60.96, 0])
+        rotate([0, 0, 10.00])
+            translate([-7.00, -7.00, 0])
+                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([238.12, 62.87, 0])
+        rotate([0, 0, 15.00])
+            translate([-7.00, -7.00, 0])
+                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
 }
 
 // Generate the case

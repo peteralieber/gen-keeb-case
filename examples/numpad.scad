@@ -24,18 +24,52 @@ module keyboard_case() {
                   case_depth - base_height + 1]);
 
         // Switch cutouts
-        translate([wall_thickness + 5, wall_thickness + 5, -1])
+        translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
             switch_plate();
     }
 }
 
 module switch_plate() {
-    for (row = [0:4]) {
-        for (col = [0:3]) {
-            translate([col * key_spacing, row * key_spacing, 0])
-                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-        }
-    }
+    translate([0.00, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 57.15, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 57.15, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 57.15, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 57.15, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 76.20, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 76.20, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 76.20, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 76.20, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
 }
 
 // Generate the case
