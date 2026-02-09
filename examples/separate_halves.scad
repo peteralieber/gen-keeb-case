@@ -1,36 +1,54 @@
-// Generated keyboard case
-// Layout: Custom (34 keys)
+// Generated keyboard case - Separate halves
+// Layout: Custom (30 keys total)
 // Switch type: Cherry MX
-// Split keyboard: unified case
+// Split keyboard: separate halves
 
 // Parameters
-case_width = 279.25;
-case_height = 98.27;
+left_case_width = 107.80;
+left_case_height = 69.70;
+right_case_width = 107.80;
+right_case_height = 69.70;
 case_depth = 18.00;
 wall_thickness = 3.00;
 base_height = 10.00;
 switch_cutout_size = 14.00;
-key_spacing = 19.05;
+separation = 50;  // Distance between halves for visualization
 
-module keyboard_case() {
+module left_half() {
     difference() {
         // Outer shell
-        translate([0, 0, 0])
-            cube([case_width, case_height, case_depth]);
+        cube([left_case_width, left_case_height, case_depth]);
 
         // Inner cavity
         translate([wall_thickness, wall_thickness, base_height])
-            cube([case_width - 2*wall_thickness, 
-                  case_height - 2*wall_thickness, 
+            cube([left_case_width - 2*wall_thickness, 
+                  left_case_height - 2*wall_thickness, 
                   case_depth - base_height + 1]);
 
         // Switch cutouts
-        translate([wall_thickness + 5 - -38.10, wall_thickness + 5 - 0.00, -1])
-            switch_plate();
+        translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
+            left_switch_plate();
     }
 }
 
-module switch_plate() {
+module right_half() {
+    difference() {
+        // Outer shell
+        cube([right_case_width, right_case_height, case_depth]);
+
+        // Inner cavity
+        translate([wall_thickness, wall_thickness, base_height])
+            cube([right_case_width - 2*wall_thickness, 
+                  right_case_height - 2*wall_thickness, 
+                  case_depth - base_height + 1]);
+
+        // Switch cutouts
+        translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
+            right_switch_plate();
+    }
+}
+
+module left_switch_plate() {
     translate([0.00, 0.00, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([19.05, 0.00, 0])
@@ -61,53 +79,42 @@ module switch_plate() {
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
     translate([76.20, 38.10, 0])
         cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([152.40, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([171.45, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([190.50, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([209.55, 0.00, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([152.40, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([171.45, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([190.50, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([209.55, 19.05, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([133.35, 38.10, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([152.40, 38.10, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([171.45, 38.10, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([190.50, 38.10, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([209.55, 38.10, 0])
-        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([19.05, 62.87, 0])
-        rotate([0, 0, -15.00])
-            translate([-7.00, -7.00, 0])
-                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([-19.05, 62.87, 0])
-        rotate([0, 0, 15.00])
-            translate([-7.00, -7.00, 0])
-                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([38.10, 66.67, 0])
-        rotate([0, 0, -10.00])
-            translate([-7.00, -7.00, 0])
-                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
-    translate([-38.10, 66.67, 0])
-        rotate([0, 0, 10.00])
-            translate([-7.00, -7.00, 0])
-                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
 }
 
-// Generate the case
-keyboard_case();
+module right_switch_plate() {
+    translate([0.00, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([76.20, 0.00, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([76.20, 19.05, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([0.00, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([19.05, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([38.10, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([57.15, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+    translate([76.20, 38.10, 0])
+        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);
+}
+
+// Generate both halves
+left_half();
+translate([left_case_width + separation, 0, 0])
+    right_half();

@@ -165,9 +165,56 @@ def example_4_split_with_both_halves_mirror():
     print(f"  Generated with {len(layout.custom_keys)} keys (includes mirrored thumbs)")
 
 
-def example_5_error_handling():
-    """Example 5: Demonstrate error handling for overlapping keys."""
-    print("\nExample 5: Error handling for overlapping keys...")
+def example_5_separate_halves():
+    """Example 5: Split keyboard with separate case halves."""
+    print("\nExample 5: Split keyboard with separate halves...")
+    
+    spacing = 19.05
+    
+    # Left half: 4x5 grid
+    left_keys = []
+    for row in range(4):
+        for col in range(5):
+            left_keys.append({
+                'x': col * spacing,
+                'y': row * spacing,
+                'half': 'left'
+            })
+    
+    # Add left thumb cluster
+    left_keys.append({'x': spacing * 1.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'left'})
+    left_keys.append({'x': spacing * 2.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'left'})
+    
+    # Right half: 4x5 grid
+    right_keys = []
+    for row in range(4):
+        for col in range(5):
+            right_keys.append({
+                'x': col * spacing,
+                'y': row * spacing,
+                'half': 'right'
+            })
+    
+    # Add right thumb cluster
+    right_keys.append({'x': spacing * 1.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'right'})
+    right_keys.append({'x': spacing * 2.5, 'y': spacing * 4.2, 'rotation': 0, 'half': 'right'})
+    
+    layout = KeyboardLayout(
+        switch_type_name="cherry_mx",
+        custom_keys=left_keys + right_keys,
+        split=True,
+        split_distance=spacing * 2,
+        separate_halves=True  # This generates two separate cases
+    )
+    
+    generator = CaseGenerator(layout=layout)
+    generator.save("examples/separate_halves_with_thumbs.scad")
+    print(f"  Generated with {len(layout.custom_keys)} keys (separate left & right)")
+
+
+def example_6_error_handling():
+    """Example 6: Demonstrate error handling for overlapping keys."""
+    print("\nExample 6: Error handling for overlapping keys...")
     
     try:
         # These keys are too close and should fail
@@ -193,7 +240,8 @@ if __name__ == "__main__":
     example_2_split_keyboard_unified()
     example_3_split_with_both_halves_copy()
     example_4_split_with_both_halves_mirror()
-    example_5_error_handling()
+    example_5_separate_halves()
+    example_6_error_handling()
     
     print("\n✓ All examples generated successfully!")
     print("\nYou can open the .scad files in OpenSCAD to view the 3D models.")

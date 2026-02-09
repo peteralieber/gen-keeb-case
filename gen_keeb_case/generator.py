@@ -207,6 +207,15 @@ class CaseGenerator:
         
     def generate_scad(self):
         """Generate the complete OpenSCAD code."""
+        if self.layout.separate_halves and self.layout.split:
+            # Generate two separate cases
+            return self._generate_separate_halves_scad()
+        else:
+            # Generate single unified case
+            return self._generate_unified_scad()
+    
+    def _generate_unified_scad(self):
+        """Generate OpenSCAD code for a unified case."""
         width, height = self.layout.get_dimensions()
         
         # Add margins for walls
@@ -221,6 +230,8 @@ class CaseGenerator:
         else:
             scad_code.append(f"// Layout: Custom ({len(self.layout.custom_keys)} keys)")
         scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
+        if self.layout.split:
+            scad_code.append(f"// Split keyboard: unified case")
         scad_code.append("")
         
         # Parameters
@@ -255,7 +266,7 @@ class CaseGenerator:
         scad_code.append("}")
         scad_code.append("")
         
-        # Switch plate module - now supports custom positions and rotation
+        # Switch plate module
         scad_code.append("module switch_plate() {")
         for key in self.layout.custom_keys:
             x = key['x']
@@ -282,6 +293,132 @@ class CaseGenerator:
         
         return "\n".join(scad_code)
     
+    def _generate_separate_halves_scad(self):
+        """Generate OpenSCAD code for separate left and right halves."""
+        left_keys = [k for k in self.layout.custom_keys if k.get('half') != 'right']
+        right_keys = [k for k in self.layout.custom_keys if k.get('half') != 'left']
+        
+        # Calculate dimensions for each half
+        left_width, left_height = self.layout._calculate_bounding_box(left_keys) if left_keys else (0, 0)
+        right_width, right_height = self.layout._calculate_bounding_box(right_keys) if right_keys else (0, 0)
+        
+        # Add margins for walls
+        left_case_width = left_width + 2 * self.wall_thickness + 10
+        left_case_height = left_height + 2 * self.wall_thickness + 10
+        right_case_width = right_width + 2 * self.wall_thickness + 10
+        right_case_height = right_height + 2 * self.wall_thickness + 10
+        case_depth = self.base_height + self.top_clearance
+        
+        scad_code = []
+        scad_code.append("// Generated keyboard case - Separate halves")
+        scad_code.append(f"// Layout: Custom ({len(self.layout.custom_keys)} keys total)")
+        scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
+        scad_code.append(f"// Split keyboard: separate halves")
+        scad_code.append("")
+        
+        # Parameters
+        scad_code.append("// Parameters")
+        scad_code.append(f"left_case_width = {left_case_width:.2f};")
+        scad_code.append(f"left_case_height = {left_case_height:.2f};")
+        scad_code.append(f"right_case_width = {right_case_width:.2f};")
+        scad_code.append(f"right_case_height = {right_case_height:.2f};")
+        scad_code.append(f"case_depth = {case_depth:.2f};")
+        scad_code.append(f"wall_thickness = {self.wall_thickness:.2f};")
+        scad_code.append(f"base_height = {self.base_height:.2f};")
+        scad_code.append(f"switch_cutout_size = {self.layout.switch_type.plate_cutout_size:.2f};")
+        scad_code.append(f"separation = 50;  // Distance between halves for visualization")
+        scad_code.append("")
+        
+        # Left half module
+        scad_code.append("module left_half() {")
+        scad_code.append("    difference() {")
+        scad_code.append("        // Outer shell")
+        scad_code.append("        cube([left_case_width, left_case_height, case_depth]);")
+        scad_code.append("")
+        scad_code.append("        // Inner cavity")
+        scad_code.append("        translate([wall_thickness, wall_thickness, base_height])")
+        scad_code.append("            cube([left_case_width - 2*wall_thickness, ")
+        scad_code.append("                  left_case_height - 2*wall_thickness, ")
+        scad_code.append("                  case_depth - base_height + 1]);")
+        scad_code.append("")
+        scad_code.append("        // Switch cutouts")
+        if left_keys:
+            left_offset_x = min(key['x'] for key in left_keys)
+            left_offset_y = min(key['y'] for key in left_keys)
+            scad_code.append(f"        translate([wall_thickness + 5 - {left_offset_x:.2f}, wall_thickness + 5 - {left_offset_y:.2f}, -1])")
+            scad_code.append("            left_switch_plate();")
+        scad_code.append("    }")
+        scad_code.append("}")
+        scad_code.append("")
+        
+        # Right half module
+        scad_code.append("module right_half() {")
+        scad_code.append("    difference() {")
+        scad_code.append("        // Outer shell")
+        scad_code.append("        cube([right_case_width, right_case_height, case_depth]);")
+        scad_code.append("")
+        scad_code.append("        // Inner cavity")
+        scad_code.append("        translate([wall_thickness, wall_thickness, base_height])")
+        scad_code.append("            cube([right_case_width - 2*wall_thickness, ")
+        scad_code.append("                  right_case_height - 2*wall_thickness, ")
+        scad_code.append("                  case_depth - base_height + 1]);")
+        scad_code.append("")
+        scad_code.append("        // Switch cutouts")
+        if right_keys:
+            right_offset_x = min(key['x'] for key in right_keys)
+            right_offset_y = min(key['y'] for key in right_keys)
+            scad_code.append(f"        translate([wall_thickness + 5 - {right_offset_x:.2f}, wall_thickness + 5 - {right_offset_y:.2f}, -1])")
+            scad_code.append("            right_switch_plate();")
+        scad_code.append("    }")
+        scad_code.append("}")
+        scad_code.append("")
+        
+        # Left switch plate module
+        scad_code.append("module left_switch_plate() {")
+        for key in left_keys:
+            x = key['x']
+            y = key['y']
+            rotation = key.get('rotation', 0)
+            
+            if rotation != 0:
+                center_offset = self.layout.switch_type.plate_cutout_size / 2
+                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
+                scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
+                scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+            else:
+                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+        scad_code.append("}")
+        scad_code.append("")
+        
+        # Right switch plate module
+        scad_code.append("module right_switch_plate() {")
+        for key in right_keys:
+            x = key['x']
+            y = key['y']
+            rotation = key.get('rotation', 0)
+            
+            if rotation != 0:
+                center_offset = self.layout.switch_type.plate_cutout_size / 2
+                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
+                scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
+                scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+            else:
+                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+        scad_code.append("}")
+        scad_code.append("")
+        
+        # Main call - show both halves side by side
+        scad_code.append("// Generate both halves")
+        scad_code.append("left_half();")
+        scad_code.append("translate([left_case_width + separation, 0, 0])")
+        scad_code.append("    right_half();")
+        
+        return "\n".join(scad_code)
+        
     def generate_svg(self):
         """Generate an SVG representation of the top-down view of the case."""
         width, height = self.layout.get_dimensions()

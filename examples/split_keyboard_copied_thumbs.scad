@@ -1,6 +1,7 @@
 // Generated keyboard case
 // Layout: Custom (44 keys)
 // Switch type: Cherry MX
+// Split keyboard: unified case
 
 // Parameters
 case_width = 241.15;
