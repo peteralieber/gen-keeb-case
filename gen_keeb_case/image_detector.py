@@ -6,6 +6,13 @@ import cv2
 import numpy as np
 
 
+# Detection constants
+MIN_HORIZONTAL_SEPARATION = 10  # Minimum horizontal distance between keys in pixels
+MIN_VERTICAL_SEPARATION = 10  # Minimum vertical distance between keys in pixels
+GRID_FIT_THRESHOLD = 0.8  # Fraction of keys that must fit grid pattern (80%)
+MAX_GRID_ROTATION_DEGREES = 5  # Maximum rotation angle for grid-aligned keys (degrees)
+
+
 class KeyboardImageDetector:
     """Detects keyboard key positions from a top-down image."""
     
@@ -159,7 +166,7 @@ class KeyboardImageDetector:
             y_diff = abs(k1['y'] - k2['y'])
             if y_diff < 30:  # Threshold for same row
                 x_diff = abs(k1['x'] - k2['x'])
-                if x_diff > 10 and x_diff < min_spacing:  # Must have some separation
+                if x_diff > MIN_HORIZONTAL_SEPARATION and x_diff < min_spacing:
                     min_spacing = x_diff
         
         # If no horizontal spacing found, try vertical spacing
@@ -168,7 +175,7 @@ class KeyboardImageDetector:
                 k1 = sorted_keys[i]
                 k2 = sorted_keys[i + 1]
                 y_diff = abs(k1['y'] - k2['y'])
-                if y_diff > 10 and y_diff < min_spacing:
+                if y_diff > MIN_VERTICAL_SEPARATION and y_diff < min_spacing:
                     min_spacing = y_diff
         
         return min_spacing if min_spacing != float('inf') else 1.0
@@ -227,12 +234,12 @@ class KeyboardImageDetector:
                     'rotation': key['rotation']
                 })
         
-        # If most keys fit the grid (>80%), consider it a grid layout
-        if len(rounded_keys) / len(keys_mm) < 0.8:
+        # If most keys fit the grid (>GRID_FIT_THRESHOLD), consider it a grid layout
+        if len(rounded_keys) / len(keys_mm) < GRID_FIT_THRESHOLD:
             return None
         
         # Check if all keys have 0 rotation (or very close to 0)
-        if not all(abs(key['rotation']) < 5 for key in keys_mm):
+        if not all(abs(key['rotation']) < MAX_GRID_ROTATION_DEGREES for key in keys_mm):
             return None
         
         # Calculate grid dimensions
