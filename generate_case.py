@@ -88,6 +88,14 @@ def main():
     
     # Output options
     parser.add_argument(
+        "--optimization",
+        choices=['render', 'surface'],
+        default='render',
+        help="OpenSCAD optimization method for difference operations (default: render). "
+             "'render' pre-computes geometry for better performance with many keys. "
+             "'surface' generates height map files for switch plate cutouts."
+    )
+    parser.add_argument(
         "--output",
         "-o",
         default="keyboard_case.scad",
@@ -144,7 +152,8 @@ def main():
         layout=layout,
         wall_thickness=args.wall_thickness,
         base_height=args.base_height,
-        top_clearance=args.top_clearance
+        top_clearance=args.top_clearance,
+        optimization_method=args.optimization
     )
     
     # Generate and save
@@ -155,6 +164,7 @@ def main():
         print(f"  Layout: Custom ({len(layout.custom_keys)} keys)")
     print(f"  Switch type: {layout.switch_type.name}")
     print(f"  Dimensions: {layout.get_dimensions()[0]:.2f}mm x {layout.get_dimensions()[1]:.2f}mm")
+    print(f"  Optimization: {args.optimization}")
     print()
     
     generator.save(args.output)

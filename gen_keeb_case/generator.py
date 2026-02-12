@@ -2,6 +2,7 @@
 OpenSCAD code generator for keyboard cases.
 """
 
+import math
 import yaml
 from gen_keeb_case.switch_types import SWITCH_TYPES
 
@@ -330,11 +331,37 @@ class KeyboardLayout:
 class CaseGenerator:
     """Generate OpenSCAD code for keyboard cases."""
     
-    def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0):
+    # Valid optimization methods for SCAD generation
+    VALID_OPTIMIZATION_METHODS = ['render', 'surface']
+    
+    # Height map margin in mm (added to dimensions for surface optimization)
+    HEIGHTMAP_MARGIN = 10  # 5mm margin on each side
+    
+    def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0, 
+                 optimization_method='render'):
+        """
+        Initialize a case generator.
+        
+        Args:
+            layout: KeyboardLayout instance
+            wall_thickness: Thickness of case walls in mm
+            base_height: Height of case base in mm
+            top_clearance: Clearance above switches in mm
+            optimization_method: OpenSCAD optimization method for difference operations.
+                                Options: 'render', 'surface'
+                                - 'render': Use render() to pre-compute geometry (default, faster for many keys)
+                                - 'surface': Generate height map and use surface() to read it (experimental)
+        """
         self.layout = layout
         self.wall_thickness = wall_thickness
         self.base_height = base_height
         self.top_clearance = top_clearance
+        self.optimization_method = optimization_method
+        
+        # Validate optimization method
+        if optimization_method not in self.VALID_OPTIMIZATION_METHODS:
+            raise ValueError(f"Invalid optimization_method: {optimization_method}. "
+                           f"Must be one of: {', '.join(self.VALID_OPTIMIZATION_METHODS)}")
         
     def generate_scad(self):
         """Generate the complete OpenSCAD code."""
@@ -363,6 +390,7 @@ class CaseGenerator:
         scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
         if self.layout.split:
             scad_code.append(f"// Split keyboard: unified case")
+        scad_code.append(f"// Optimization: {self.optimization_method}")
         scad_code.append("")
         
         # Parameters
@@ -392,30 +420,49 @@ class CaseGenerator:
         scad_code.append("        // Switch cutouts")
         offset_x, offset_y = self.layout.get_offset()
         scad_code.append(f"        translate([wall_thickness + 5 - {offset_x:.2f}, wall_thickness + 5 - {offset_y:.2f}, -1])")
-        scad_code.append("            switch_plate();")
+        
+        # Apply optimization method if specified
+        if self.optimization_method == 'render':
+            scad_code.append("            render() switch_plate();")
+        elif self.optimization_method == 'surface':
+            # For surface method, switch_plate() module reads height map file
+            scad_code.append("            switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
         
         # Switch plate module
-        scad_code.append("module switch_plate() {")
-        for key in self.layout.custom_keys:
-            x = key['x']
-            y = key['y']
-            rotation = key.get('rotation', 0)
+        if self.optimization_method == 'surface':
+            # Generate switch plate using surface from height map
+            scad_code.append("module switch_plate() {")
+            scad_code.append("    // Switch cutouts using height map surface")
+            scad_code.append(f"    // Height map file: switch_plate_heightmap.dat")
+            scad_code.append(f"    scale([1, 1, base_height + 2])")
+            scad_code.append(f"        surface(file = \"switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append("}")
+            scad_code.append("")
+        else:
+            # Generate switch plate with individual cubes (for render method)
+            scad_code.append("module switch_plate() {")
+            for key in self.layout.custom_keys:
+                x = key['x']
+                y = key['y']
+                rotation = key.get('rotation', 0)
+                
+                if rotation != 0:
+                    # For rotated keys, rotate around the center of the switch
+                    center_offset = self.layout.switch_type.plate_cutout_size / 2
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
+                    scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
+                    scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+                else:
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
             
-            if rotation != 0:
-                # For rotated keys, rotate around the center of the switch
-                center_offset = self.layout.switch_type.plate_cutout_size / 2
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
-                scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
-                scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
-            else:
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+            scad_code.append("}")
         
-        scad_code.append("}")
         scad_code.append("")
         
         # Main call
@@ -445,6 +492,7 @@ class CaseGenerator:
         scad_code.append(f"// Layout: Custom ({len(self.layout.custom_keys)} keys total)")
         scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
         scad_code.append(f"// Split keyboard: separate halves")
+        scad_code.append(f"// Optimization: {self.optimization_method}")
         scad_code.append("")
         
         # Parameters
@@ -477,7 +525,13 @@ class CaseGenerator:
             left_offset_x = min(key['x'] for key in left_keys)
             left_offset_y = min(key['y'] for key in left_keys)
             scad_code.append(f"        translate([wall_thickness + 5 - {left_offset_x:.2f}, wall_thickness + 5 - {left_offset_y:.2f}, -1])")
-            scad_code.append("            left_switch_plate();")
+            
+            # Apply optimization method if specified
+            if self.optimization_method == 'render':
+                scad_code.append("            render() left_switch_plate();")
+            elif self.optimization_method == 'surface':
+                scad_code.append("            left_switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
@@ -499,47 +553,71 @@ class CaseGenerator:
             right_offset_x = min(key['x'] for key in right_keys)
             right_offset_y = min(key['y'] for key in right_keys)
             scad_code.append(f"        translate([wall_thickness + 5 - {right_offset_x:.2f}, wall_thickness + 5 - {right_offset_y:.2f}, -1])")
-            scad_code.append("            right_switch_plate();")
+            
+            # Apply optimization method if specified
+            if self.optimization_method == 'render':
+                scad_code.append("            render() right_switch_plate();")
+            elif self.optimization_method == 'surface':
+                scad_code.append("            right_switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
         
         # Left switch plate module
-        scad_code.append("module left_switch_plate() {")
-        for key in left_keys:
-            x = key['x']
-            y = key['y']
-            rotation = key.get('rotation', 0)
-            
-            if rotation != 0:
-                center_offset = self.layout.switch_type.plate_cutout_size / 2
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
-                scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
-                scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
-            else:
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
-        scad_code.append("}")
+        if self.optimization_method == 'surface':
+            scad_code.append("module left_switch_plate() {")
+            scad_code.append("    // Switch cutouts using height map surface")
+            scad_code.append(f"    // Height map file: left_switch_plate_heightmap.dat")
+            scad_code.append(f"    scale([1, 1, base_height + 2])")
+            scad_code.append(f"        surface(file = \"left_switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append("}")
+        else:
+            scad_code.append("module left_switch_plate() {")
+            for key in left_keys:
+                x = key['x']
+                y = key['y']
+                rotation = key.get('rotation', 0)
+                
+                if rotation != 0:
+                    center_offset = self.layout.switch_type.plate_cutout_size / 2
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
+                    scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
+                    scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+                else:
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+            scad_code.append("}")
+        
         scad_code.append("")
         
         # Right switch plate module
-        scad_code.append("module right_switch_plate() {")
-        for key in right_keys:
-            x = key['x']
-            y = key['y']
-            rotation = key.get('rotation', 0)
-            
-            if rotation != 0:
-                center_offset = self.layout.switch_type.plate_cutout_size / 2
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
-                scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
-                scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
-            else:
-                scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
-                scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
-        scad_code.append("}")
+        if self.optimization_method == 'surface':
+            scad_code.append("module right_switch_plate() {")
+            scad_code.append("    // Switch cutouts using height map surface")
+            scad_code.append(f"    // Height map file: right_switch_plate_heightmap.dat")
+            scad_code.append(f"    scale([1, 1, base_height + 2])")
+            scad_code.append(f"        surface(file = \"right_switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append("}")
+        else:
+            scad_code.append("module right_switch_plate() {")
+            for key in right_keys:
+                x = key['x']
+                y = key['y']
+                rotation = key.get('rotation', 0)
+                
+                if rotation != 0:
+                    center_offset = self.layout.switch_type.plate_cutout_size / 2
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        rotate([0, 0, {rotation:.2f}])")
+                    scad_code.append(f"            translate([{-center_offset:.2f}, {-center_offset:.2f}, 0])")
+                    scad_code.append(f"                cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+                else:
+                    scad_code.append(f"    translate([{x:.2f}, {y:.2f}, 0])")
+                    scad_code.append(f"        cube([switch_cutout_size, switch_cutout_size, base_height + 2]);")
+            scad_code.append("}")
+        
         scad_code.append("")
         
         # Main call - show both halves side by side
@@ -633,11 +711,144 @@ class CaseGenerator:
         
         return "\n".join(svg_lines)
     
+    def _generate_heightmap_dat(self, keys, offset_x, offset_y, width, height):
+        """
+        Generate a height map DAT file for switch plate cutouts.
+        
+        Args:
+            keys: List of key positions
+            offset_x: X offset for key positioning
+            offset_y: Y offset for key positioning
+            width: Width of the height map area
+            height: Height of the height map area
+            
+        Returns:
+            String content for the DAT file
+        """
+        # Resolution: 1 point per mm for reasonable detail
+        resolution = 1.0  # mm per point
+        cols = int(width / resolution) + 1
+        rows = int(height / resolution) + 1
+        
+        # Initialize height map (0 = full depth for cutout, 1 = no cutout)
+        heightmap = [[1.0 for _ in range(cols)] for _ in range(rows)]
+        
+        cutout_size = self.layout.switch_type.plate_cutout_size
+        
+        # Mark cutout areas
+        for key in keys:
+            key_x = key['x'] - offset_x
+            key_y = key['y'] - offset_y
+            rotation = key.get('rotation', 0)
+            
+            # For simplicity, we'll create rectangular cutouts
+            # TODO: Handle rotation properly with transformation
+            if rotation == 0:
+                # Simple rectangular cutout
+                x_start = int(key_x / resolution)
+                x_end = int((key_x + cutout_size) / resolution)
+                y_start = int(key_y / resolution)
+                y_end = int((key_y + cutout_size) / resolution)
+                
+                for r in range(max(0, y_start), min(rows, y_end + 1)):
+                    for c in range(max(0, x_start), min(cols, x_end + 1)):
+                        heightmap[r][c] = 0.0
+            else:
+                # For rotated keys, approximate with a larger square
+                # This is a simplification; proper rotation would require matrix math
+                # Calculate diagonal half-length: cutout_size * sqrt(2) / 2 ≈ cutout_size * 0.707
+                center_x = key_x + cutout_size / 2
+                center_y = key_y + cutout_size / 2
+                radius = cutout_size * math.sqrt(2) / 2  # Diagonal half-length for rotated square
+                
+                x_start = int((center_x - radius) / resolution)
+                x_end = int((center_x + radius) / resolution)
+                y_start = int((center_y - radius) / resolution)
+                y_end = int((center_y + radius) / resolution)
+                
+                for r in range(max(0, y_start), min(rows, y_end + 1)):
+                    for c in range(max(0, x_start), min(cols, x_end + 1)):
+                        heightmap[r][c] = 0.0
+        
+        # Generate DAT file content
+        dat_lines = []
+        for row in heightmap:
+            dat_lines.append(" ".join(str(val) for val in row))
+        
+        return "\n".join(dat_lines)
+    
     def save(self, filename):
         """Save the generated OpenSCAD code to a file."""
         with open(filename, 'w') as f:
             f.write(self.generate_scad())
         print(f"Generated OpenSCAD file: {filename}")
+        
+        # If using surface method, also generate the height map file(s)
+        if self.optimization_method == 'surface':
+            import os
+            base_dir = os.path.dirname(filename) or '.'
+            
+            if self.layout.separate_halves and self.layout.split:
+                # Generate separate height maps for left and right halves
+                left_keys = [k for k in self.layout.custom_keys if k.get('half') != 'right']
+                right_keys = [k for k in self.layout.custom_keys if k.get('half') != 'left']
+                
+                if left_keys:
+                    left_width, left_height = self.layout._calculate_bounding_box(left_keys)
+                    left_offset_x = min(key['x'] for key in left_keys)
+                    left_offset_y = min(key['y'] for key in left_keys)
+                    
+                    left_heightmap_filename = os.path.join(base_dir, 'left_switch_plate_heightmap.dat')
+                    left_heightmap_content = self._generate_heightmap_dat(
+                        left_keys,
+                        left_offset_x,
+                        left_offset_y,
+                        left_width + self.HEIGHTMAP_MARGIN,
+                        left_height + self.HEIGHTMAP_MARGIN
+                    )
+                    with open(left_heightmap_filename, 'w') as f:
+                        f.write(left_heightmap_content)
+                    print(f"Generated left height map file: {left_heightmap_filename}")
+                
+                if right_keys:
+                    right_width, right_height = self.layout._calculate_bounding_box(right_keys)
+                    right_offset_x = min(key['x'] for key in right_keys)
+                    right_offset_y = min(key['y'] for key in right_keys)
+                    
+                    right_heightmap_filename = os.path.join(base_dir, 'right_switch_plate_heightmap.dat')
+                    right_heightmap_content = self._generate_heightmap_dat(
+                        right_keys,
+                        right_offset_x,
+                        right_offset_y,
+                        right_width + self.HEIGHTMAP_MARGIN,
+                        right_height + self.HEIGHTMAP_MARGIN
+                    )
+                    with open(right_heightmap_filename, 'w') as f:
+                        f.write(right_heightmap_content)
+                    print(f"Generated right height map file: {right_heightmap_filename}")
+            else:
+                # Generate single height map for unified case
+                heightmap_filename = os.path.join(base_dir, 'switch_plate_heightmap.dat')
+                
+                # Get dimensions and offset for height map
+                width, height = self.layout.get_dimensions()
+                offset_x, offset_y = self.layout.get_offset()
+                
+                # Add margins like in SCAD generation
+                width_with_margin = width + self.HEIGHTMAP_MARGIN
+                height_with_margin = height + self.HEIGHTMAP_MARGIN
+                
+                heightmap_content = self._generate_heightmap_dat(
+                    self.layout.custom_keys,
+                    offset_x,
+                    offset_y,
+                    width_with_margin,
+                    height_with_margin
+                )
+                
+                with open(heightmap_filename, 'w') as f:
+                    f.write(heightmap_content)
+                print(f"Generated height map file: {heightmap_filename}")
     
     def save_svg(self, filename):
         """Save the generated SVG top-down view to a file."""

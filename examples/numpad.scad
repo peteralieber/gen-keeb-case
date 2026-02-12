@@ -1,6 +1,7 @@
 // Generated keyboard case
 // Layout: 5x4
 // Switch type: Cherry MX
+// Optimization: none
 
 // Parameters
 case_width = 88.75;

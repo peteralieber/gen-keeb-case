@@ -1,6 +1,7 @@
 // Generated keyboard case
 // Layout: 3x10
 // Switch type: Kailh Choc
+// Optimization: none
 
 // Parameters
 case_width = 202.45;
