@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="319.25mm" height="134.47mm" viewBox="0 0 319.25 134.47">
+<svg xmlns="http://www.w3.org/2000/svg" width="319.25mm" height="138.27mm" viewBox="0 0 319.25 138.27">
   <title>Keyboard Case Top View - Custom Layout</title>
   <desc>Generated keyboard case layout for Cherry MX switches</desc>
 
@@ -13,55 +13,49 @@
   </defs>
 
   <!-- Outer case -->
-  <rect class="case-outer" x="20" y="20" width="279.25" height="94.47" rx="2"/>
+  <rect class="case-outer" x="20" y="20" width="279.25" height="98.27" rx="2"/>
 
   <!-- Inner cavity -->
-  <rect class="case-inner" x="23.00" y="23.00" width="273.25" height="88.47" rx="1"/>
+  <rect class="case-inner" x="23.00" y="23.00" width="273.25" height="92.27" rx="1"/>
 
   <!-- Switch cutouts -->
-  <rect class="switch-cutout" x="28.00" y="28.00" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="47.05" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="66.10" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="85.15" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="104.20" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="123.25" y="28.00" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="28.00" y="47.05" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="47.05" y="47.05" width="14.00" height="14.00"/>
+  <rect class="switch-cutout" x="142.30" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="66.10" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="85.15" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="104.20" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="123.25" y="47.05" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="28.00" y="66.10" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="47.05" y="66.10" width="14.00" height="14.00"/>
+  <rect class="switch-cutout" x="142.30" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="66.10" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="85.15" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="104.20" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="123.25" y="66.10" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="56.58" y="88.96" width="14.00" height="14.00" transform="rotate(-15.00 63.58 95.96)"/>
-  <rect class="switch-cutout" x="75.62" y="90.87" width="14.00" height="14.00" transform="rotate(-10.00 82.62 97.87)"/>
-  <rect class="switch-cutout" x="180.40" y="28.00" width="14.00" height="14.00"/>
+  <rect class="switch-cutout" x="142.30" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="199.45" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="218.50" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="237.55" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="256.60" y="28.00" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="275.65" y="28.00" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="180.40" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="199.45" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="218.50" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="237.55" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="256.60" y="47.05" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="275.65" y="47.05" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="180.40" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="199.45" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="218.50" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="237.55" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="256.60" y="66.10" width="14.00" height="14.00"/>
   <rect class="switch-cutout" x="275.65" y="66.10" width="14.00" height="14.00"/>
-  <rect class="switch-cutout" x="247.07" y="88.96" width="14.00" height="14.00" transform="rotate(10.00 254.07 95.96)"/>
-  <rect class="switch-cutout" x="266.12" y="90.87" width="14.00" height="14.00" transform="rotate(15.00 273.12 97.87)"/>
+  <rect class="switch-cutout" x="85.15" y="90.87" width="14.00" height="14.00" transform="rotate(-15.00 92.15 97.87)"/>
+  <rect class="switch-cutout" x="47.05" y="90.87" width="14.00" height="14.00" transform="rotate(15.00 54.05 97.87)"/>
+  <rect class="switch-cutout" x="104.20" y="94.67" width="14.00" height="14.00" transform="rotate(-10.00 111.20 101.67)"/>
+  <rect class="switch-cutout" x="28.00" y="94.67" width="14.00" height="14.00" transform="rotate(10.00 35.00 101.67)"/>
 
   <!-- Labels -->
-  <text class="text" x="25" y="129.465">
-    Layout: Custom (40 keys) | Switch: Cherry MX | Dimensions: 279.2x94.5mm
+  <text class="text" x="25" y="133.27499999999998">
+    Layout: Custom (34 keys) | Switch: Cherry MX | Dimensions: 279.2x98.3mm
   </text>
 </svg>
