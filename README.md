@@ -22,15 +22,23 @@ This POC demonstrates automatic generation of 3D printable keyboard cases using 
 - 🔄 **Mirror/Copy modes**: Automatically mirror or copy keys across halves
 - 🔍 **Overlap detection**: Automatic validation to prevent overlapping keys
 - 📦 **Separate halves**: Generate individual cases for each half
+- 🖼️ **Image detection**: Detect keyboard layout from top-down images
+- 📄 **YAML serialization**: Save and load keyboard layouts from YAML files
 
 ## Installation
 
-No external dependencies required! Uses Python 3 standard library only.
+Install the required dependencies:
 
 ```bash
 git clone https://github.com/peteralieber/gen-keeb-case.git
 cd gen-keeb-case
+pip install -r requirements.txt
 ```
+
+For basic case generation (grid layouts only), no external dependencies are required.
+For image detection and YAML support, install:
+- OpenCV (`opencv-python`)
+- PyYAML (`PyYAML`)
 
 ## Quick Start
 
@@ -63,6 +71,64 @@ This generates additional examples demonstrating new features:
 ```bash
 python3 generate_case.py --rows 5 --cols 15 --switch-type cherry_mx --output my_keyboard.scad
 ```
+
+### Detect Layout from Image
+
+Detect keyboard layout from a top-down image and generate a case:
+
+```bash
+python3 generate_case.py --image keyboard_photo.png --reference-spacing 60 --visualize --save-yaml layout.yaml --output detected_case.scad
+```
+
+Options:
+- `--image`: Path to top-down keyboard image
+- `--reference-spacing`: Spacing between keys in pixels (helps with scale calibration)
+- `--visualize`: Show detected keys overlaid on the image
+- `--save-yaml`: Save the detected layout to a YAML file
+- `--auto-correct-rotation`: Automatically detect and correct image tilt (recommended)
+
+**Rotation Correction:**
+If your keyboard photo is tilted, use `--auto-correct-rotation` to automatically straighten it:
+- Detects the overall rotation angle from key orientations
+- Rotates the image to align keys with axes
+- Improves grid detection accuracy
+- Results in cleaner key positions and smaller output files
+
+Example with rotation correction:
+```bash
+python3 generate_case.py --image tilted_keyboard.jpg --auto-correct-rotation --visualize --output case.scad
+```
+
+### Import Layout from YAML
+
+Load a previously saved or manually created layout from a YAML file:
+
+```bash
+python3 generate_case.py --import-yaml layout.yaml --output case_from_yaml.scad
+```
+
+### Generate YAML Examples
+
+```bash
+python3 examples_yaml.py
+```
+
+This demonstrates YAML serialization features and creates:
+- YAML layout files in `examples/*.yaml`
+- Multiple OpenSCAD cases from imported YAML layouts
+
+### Complete Workflow Example
+
+1. Take a top-down photo of your keyboard
+2. Detect the layout and save to YAML (with rotation correction):
+   ```bash
+   python3 generate_case.py --image my_keyboard.jpg --reference-spacing 80 --save-yaml my_layout.yaml --visualize --auto-correct-rotation
+   ```
+3. Edit the YAML file if needed to fine-tune positions
+4. Generate the case from the YAML:
+   ```bash
+   python3 generate_case.py --import-yaml my_layout.yaml --output my_case.scad
+   ```
 
 ## Advanced Usage
 
@@ -218,6 +284,73 @@ except ValueError as e:
 | Cherry MX LP | 15.6 x 15.6 mm | 14.0 mm | 3.2 mm |
 | Kailh Choc | 15.0 x 15.0 mm | 13.8 mm | 3.0 mm |
 
+## YAML Layout Format
+
+Keyboard layouts can be saved and loaded from YAML files. The format supports both grid and custom layouts, as well as split keyboard features.
+
+### Grid Layout Example
+```yaml
+switch_type: Cherry MX
+key_spacing: 19.05
+grid:
+  rows: 5
+  cols: 15
+keys:
+  - x: 0.0
+    y: 0.0
+    rotation: 0
+  # ... more keys
+```
+
+### Custom Layout Example (with rotations)
+```yaml
+switch_type: Kailh Choc
+key_spacing: 19.05
+keys:
+  - x: 0.0
+    y: 0.0
+    rotation: 0
+  - x: 30.0
+    y: 50.0
+    rotation: -15  # Angled key (e.g., thumb cluster)
+```
+
+### Split Keyboard Example
+```yaml
+switch_type: Cherry MX
+key_spacing: 19.05
+split: true
+split_distance: 50.0
+separate_halves: false  # true for separate cases
+keys:
+  - x: 0.0
+    y: 0.0
+    rotation: 0
+    half: left
+  - x: 152.4
+    y: 0.0
+    rotation: 0
+    half: right
+  - x: 28.575
+    y: 66.675
+    rotation: -15
+    half: both  # Key appears on both halves
+    mirror: true  # Mirror position/rotation on right half
+```
+
+Fields:
+- `switch_type`: The display name of the switch type (e.g., "Cherry MX", "Kailh Choc")
+- `key_spacing`: Spacing between keys in mm (standard is 19.05mm)
+- `grid`: Optional - if present, indicates a regular grid layout with rows/cols
+- `split`: Optional - set to true for split keyboards
+- `split_distance`: Optional - distance between split halves in mm
+- `separate_halves`: Optional - generate two separate cases instead of unified
+- `keys`: List of key positions with:
+  - `x`, `y`: coordinates in mm
+  - `rotation`: optional rotation in degrees
+  - `half`: optional, for split keyboards ('left', 'right', or 'both')
+  - `mirror`: optional, for 'both' half (true to mirror, false to copy)
+
 ## Project Structure
 
 ```
@@ -237,7 +370,8 @@ gen-keeb-case/
 
 ## Future Enhancements
 
-- Image-based layout detection
+- ✅ ~~Image-based layout detection~~ (Implemented!)
+- ✅ ~~YAML serialization for layouts~~ (Implemented!)
 - Front profile customization
 - PCB mounting holes
 - Angled/tilted case designs
@@ -271,6 +405,14 @@ Main class for defining keyboard layouts.
     'mirror': bool          # True to mirror, False to copy (optional, for 'both')
 }
 ```
+
+**Methods:**
+- `to_dict()`: Convert layout to dictionary for serialization
+- `from_dict(data)`: Create layout from dictionary (class method)
+- `save_yaml(filename)`: Save layout to YAML file
+- `load_yaml(filename)`: Load layout from YAML file (class method)
+- `get_dimensions()`: Returns (width, height) tuple in mm
+- `get_offset()`: Returns (min_x, min_y) offset for positioning
 
 ### CaseGenerator
 
