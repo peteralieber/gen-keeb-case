@@ -2,6 +2,7 @@
 OpenSCAD code generator for keyboard cases.
 """
 
+import math
 from gen_keeb_case.switch_types import SWITCH_TYPES
 
 
@@ -293,7 +294,7 @@ class CaseGenerator:
         if self.optimization_method == 'render':
             scad_code.append("            render() switch_plate();")
         elif self.optimization_method == 'surface':
-            # Surface method uses height map file
+            # For surface method, switch_plate() module reads height map file
             scad_code.append("            switch_plate();")
         
         scad_code.append("    }")
@@ -624,10 +625,9 @@ class CaseGenerator:
             else:
                 # For rotated keys, approximate with a larger square
                 # This is a simplification; proper rotation would require matrix math
-                # Using sqrt(2)/2 ≈ 0.707 as the radius to encompass a rotated square
+                # Calculate diagonal half-length: cutout_size * sqrt(2) / 2 ≈ cutout_size * 0.707
                 center_x = key_x + cutout_size / 2
                 center_y = key_y + cutout_size / 2
-                import math
                 radius = cutout_size * math.sqrt(2) / 2  # Diagonal half-length for rotated square
                 
                 x_start = int((center_x - radius) / resolution)
