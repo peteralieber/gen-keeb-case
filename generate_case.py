@@ -51,11 +51,11 @@ def main():
     )
     parser.add_argument(
         "--optimization",
-        choices=['none', 'render', 'surface'],
-        default='none',
-        help="OpenSCAD optimization method for difference operations (default: none). "
+        choices=['render', 'surface'],
+        default='render',
+        help="OpenSCAD optimization method for difference operations (default: render). "
              "'render' pre-computes geometry for better performance with many keys. "
-             "'surface' converts to surface representation."
+             "'surface' generates height map files for switch plate cutouts."
     )
     parser.add_argument(
         "--output",

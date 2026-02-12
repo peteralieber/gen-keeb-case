@@ -11,34 +11,32 @@ from gen_keeb_case.generator import KeyboardLayout, CaseGenerator
 
 
 def test_optimization_methods():
-    """Test that all three optimization methods generate valid SCAD code."""
+    """Test that optimization methods generate valid SCAD code."""
     print("Testing optimization methods...")
     
     # Create a simple layout
     layout = KeyboardLayout(rows=3, cols=3, switch_type_name="cherry_mx")
     
-    # Test 1: None optimization
+    # Test 1: Default (render) optimization
     try:
-        generator = CaseGenerator(layout=layout, optimization_method='none')
+        generator = CaseGenerator(layout=layout)
         scad_code = generator.generate_scad()
-        assert "// Optimization: none" in scad_code
-        # Check that switch_plate() is called without any wrapper
-        assert "switch_plate();" in scad_code
-        assert "render()" not in scad_code
-        assert "surface()" not in scad_code
-        print("✓ Test 1 passed: 'none' optimization works correctly")
+        assert "// Optimization: render" in scad_code
+        # Check that render() wraps switch_plate()
+        assert "render()" in scad_code and "switch_plate();" in scad_code
+        print("✓ Test 1 passed: Default 'render' optimization works correctly")
     except Exception as e:
         print(f"✗ Test 1 failed: {e}")
         return False
     
-    # Test 2: Render optimization
+    # Test 2: Explicit render optimization
     try:
         generator = CaseGenerator(layout=layout, optimization_method='render')
         scad_code = generator.generate_scad()
         assert "// Optimization: render" in scad_code
         # Check that render() wraps switch_plate()
         assert "render()" in scad_code and "switch_plate();" in scad_code
-        print("✓ Test 2 passed: 'render' optimization works correctly")
+        print("✓ Test 2 passed: Explicit 'render' optimization works correctly")
     except Exception as e:
         print(f"✗ Test 2 failed: {e}")
         return False
@@ -48,20 +46,21 @@ def test_optimization_methods():
         generator = CaseGenerator(layout=layout, optimization_method='surface')
         scad_code = generator.generate_scad()
         assert "// Optimization: surface" in scad_code
-        # Check that surface() wraps switch_plate()
-        assert "surface()" in scad_code and "switch_plate();" in scad_code
-        print("✓ Test 3 passed: 'surface' optimization works correctly")
+        # Check that surface() is used with height map file
+        assert "surface(file" in scad_code
+        assert "switch_plate_heightmap.dat" in scad_code
+        print("✓ Test 3 passed: 'surface' optimization with height map works correctly")
     except Exception as e:
         print(f"✗ Test 3 failed: {e}")
         return False
     
     # Test 4: Invalid optimization method
     try:
-        generator = CaseGenerator(layout=layout, optimization_method='invalid')
-        print("✗ Test 4 failed: Invalid optimization should have raised ValueError")
+        generator = CaseGenerator(layout=layout, optimization_method='none')
+        print("✗ Test 4 failed: 'none' optimization should no longer be valid")
         return False
     except ValueError as e:
-        print(f"✓ Test 4 passed: Invalid optimization rejected - {e}")
+        print(f"✓ Test 4 passed: Invalid optimization 'none' rejected - {e}")
     
     # Test 5: Split keyboard with optimization
     try:
@@ -82,7 +81,7 @@ def test_optimization_methods():
         assert "render()" in scad_code
         assert "left_switch_plate();" in scad_code
         assert "right_switch_plate();" in scad_code
-        print("✓ Test 5 passed: Split keyboard with optimization works correctly")
+        print("✓ Test 5 passed: Split keyboard with render optimization works correctly")
     except Exception as e:
         print(f"✗ Test 5 failed: {e}")
         return False

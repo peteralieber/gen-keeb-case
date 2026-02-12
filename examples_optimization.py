@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate examples demonstrating different optimization methods.
-This script creates the same keyboard layout with three different optimization methods
+This script creates the same keyboard layout with two different optimization methods
 so you can compare their performance in OpenSCAD.
 """
 
@@ -22,18 +22,13 @@ def generate_optimization_examples():
     print(f"Layout: 5 rows x 15 columns (75 keys total)")
     print()
     
-    # Generate with no optimization
-    print("1. Generating without optimization...")
-    generator_none = CaseGenerator(layout=layout, optimization_method='none')
-    generator_none.save("examples/optimization_none.scad")
-    
-    # Generate with render() optimization
-    print("2. Generating with render() optimization...")
+    # Generate with render() optimization (default)
+    print("1. Generating with render() optimization...")
     generator_render = CaseGenerator(layout=layout, optimization_method='render')
     generator_render.save("examples/optimization_render.scad")
     
-    # Generate with surface() optimization
-    print("3. Generating with surface() optimization...")
+    # Generate with surface() optimization (creates height map)
+    print("2. Generating with surface() optimization (with height map)...")
     generator_surface = CaseGenerator(layout=layout, optimization_method='surface')
     generator_surface.save("examples/optimization_surface.scad")
     
@@ -44,14 +39,15 @@ def generate_optimization_examples():
     print("1. Open each .scad file in OpenSCAD")
     print("2. Press F6 to render (this will show the render time)")
     print("3. Compare the render times:")
-    print("   - optimization_none.scad: Baseline (no optimization)")
-    print("   - optimization_render.scad: Using render() wrapper")
-    print("   - optimization_surface.scad: Using surface() wrapper")
+    print("   - optimization_render.scad: Using render() wrapper (recommended)")
+    print("   - optimization_surface.scad: Using surface() with height map file")
     print()
     print("Expected results:")
-    print("- render() typically provides the best performance improvement")
-    print("- surface() may work but has limitations with CSG operations")
+    print("- render() provides significant performance improvement for many keys")
+    print("- surface() method creates a height map file and uses OpenSCAD's surface()")
     print("- With 75 keys, you should see noticeable performance differences")
+    print()
+    print("Note: The surface() method generates .dat height map files in the examples/ directory.")
 
 
 if __name__ == "__main__":
