@@ -199,11 +199,33 @@ class KeyboardLayout:
 class CaseGenerator:
     """Generate OpenSCAD code for keyboard cases."""
     
-    def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0):
+    def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0, 
+                 optimization_method='none'):
+        """
+        Initialize a case generator.
+        
+        Args:
+            layout: KeyboardLayout instance
+            wall_thickness: Thickness of case walls in mm
+            base_height: Height of case base in mm
+            top_clearance: Clearance above switches in mm
+            optimization_method: OpenSCAD optimization method for difference operations.
+                                Options: 'none', 'render', 'surface'
+                                - 'none': No optimization (default)
+                                - 'render': Use render() to pre-compute geometry (faster for many keys)
+                                - 'surface': Use surface() to convert to surface representation
+        """
         self.layout = layout
         self.wall_thickness = wall_thickness
         self.base_height = base_height
         self.top_clearance = top_clearance
+        self.optimization_method = optimization_method
+        
+        # Validate optimization method
+        valid_methods = ['none', 'render', 'surface']
+        if optimization_method not in valid_methods:
+            raise ValueError(f"Invalid optimization_method: {optimization_method}. "
+                           f"Must be one of: {', '.join(valid_methods)}")
         
     def generate_scad(self):
         """Generate the complete OpenSCAD code."""
@@ -232,6 +254,7 @@ class CaseGenerator:
         scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
         if self.layout.split:
             scad_code.append(f"// Split keyboard: unified case")
+        scad_code.append(f"// Optimization: {self.optimization_method}")
         scad_code.append("")
         
         # Parameters
@@ -261,7 +284,15 @@ class CaseGenerator:
         scad_code.append("        // Switch cutouts")
         offset_x, offset_y = self.layout.get_offset()
         scad_code.append(f"        translate([wall_thickness + 5 - {offset_x:.2f}, wall_thickness + 5 - {offset_y:.2f}, -1])")
-        scad_code.append("            switch_plate();")
+        
+        # Apply optimization method if specified
+        if self.optimization_method == 'render':
+            scad_code.append("            render() switch_plate();")
+        elif self.optimization_method == 'surface':
+            scad_code.append("            surface() switch_plate();")
+        else:
+            scad_code.append("            switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
@@ -314,6 +345,7 @@ class CaseGenerator:
         scad_code.append(f"// Layout: Custom ({len(self.layout.custom_keys)} keys total)")
         scad_code.append(f"// Switch type: {self.layout.switch_type.name}")
         scad_code.append(f"// Split keyboard: separate halves")
+        scad_code.append(f"// Optimization: {self.optimization_method}")
         scad_code.append("")
         
         # Parameters
@@ -346,7 +378,15 @@ class CaseGenerator:
             left_offset_x = min(key['x'] for key in left_keys)
             left_offset_y = min(key['y'] for key in left_keys)
             scad_code.append(f"        translate([wall_thickness + 5 - {left_offset_x:.2f}, wall_thickness + 5 - {left_offset_y:.2f}, -1])")
-            scad_code.append("            left_switch_plate();")
+            
+            # Apply optimization method if specified
+            if self.optimization_method == 'render':
+                scad_code.append("            render() left_switch_plate();")
+            elif self.optimization_method == 'surface':
+                scad_code.append("            surface() left_switch_plate();")
+            else:
+                scad_code.append("            left_switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
@@ -368,7 +408,15 @@ class CaseGenerator:
             right_offset_x = min(key['x'] for key in right_keys)
             right_offset_y = min(key['y'] for key in right_keys)
             scad_code.append(f"        translate([wall_thickness + 5 - {right_offset_x:.2f}, wall_thickness + 5 - {right_offset_y:.2f}, -1])")
-            scad_code.append("            right_switch_plate();")
+            
+            # Apply optimization method if specified
+            if self.optimization_method == 'render':
+                scad_code.append("            render() right_switch_plate();")
+            elif self.optimization_method == 'surface':
+                scad_code.append("            surface() right_switch_plate();")
+            else:
+                scad_code.append("            right_switch_plate();")
+        
         scad_code.append("    }")
         scad_code.append("}")
         scad_code.append("")
