@@ -3,6 +3,7 @@ OpenSCAD code generator for keyboard cases.
 """
 
 import math
+import yaml
 from gen_keeb_case.switch_types import SWITCH_TYPES
 
 
@@ -195,6 +196,136 @@ class KeyboardLayout:
         min_x = min(key['x'] for key in self.custom_keys)
         min_y = min(key['y'] for key in self.custom_keys)
         return min_x, min_y
+    
+    def to_dict(self):
+        """
+        Convert the keyboard layout to a dictionary for serialization.
+        
+        Returns:
+            dict: Dictionary representation of the layout
+        """
+        data = {
+            'switch_type': self.switch_type.name,
+            'key_spacing': self.key_spacing,
+            'keys': self.custom_keys
+        }
+        
+        # Add grid info if rows and cols are present (regardless of is_custom)
+        # This handles the grid + custom keys case
+        if self.rows is not None and self.cols is not None:
+            data['grid'] = {
+                'rows': self.rows,
+                'cols': self.cols
+            }
+        
+        # Add split keyboard parameters if present
+        if self.split:
+            data['split'] = self.split
+            if self.split_distance is not None:
+                data['split_distance'] = self.split_distance
+            if self.separate_halves:
+                data['separate_halves'] = self.separate_halves
+        
+        return data
+    
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Create a KeyboardLayout from a dictionary.
+        
+        Args:
+            data: Dictionary with layout data
+            
+        Returns:
+            KeyboardLayout: New KeyboardLayout instance
+        """
+        # Find switch type name from the switch type display name
+        switch_type_name = None
+        for key, switch in SWITCH_TYPES.items():
+            if switch.name == data.get('switch_type'):
+                switch_type_name = key
+                break
+        
+        if switch_type_name is None:
+            # Default to cherry_mx if not found
+            switch_type_name = "cherry_mx"
+        
+        # Extract split keyboard parameters
+        split = data.get('split', False)
+        split_distance = data.get('split_distance', None)
+        separate_halves = data.get('separate_halves', False)
+        
+        # Check if this has grid info
+        if 'grid' in data:
+            rows = data['grid']['rows']
+            cols = data['grid']['cols']
+            expected_grid_keys = rows * cols
+            all_keys = data.get('keys', [])
+            
+            # Check if we have more keys than just the grid
+            # If so, the extra keys are custom keys that were added to the grid
+            if len(all_keys) > expected_grid_keys:
+                # Extract custom keys (ones beyond the first rows*cols)
+                custom_keys = all_keys[expected_grid_keys:]
+                layout = cls(
+                    rows=rows,
+                    cols=cols,
+                    custom_keys=custom_keys,
+                    switch_type_name=switch_type_name,
+                    split=split,
+                    split_distance=split_distance,
+                    separate_halves=separate_halves
+                )
+            else:
+                # Pure grid layout
+                layout = cls(
+                    rows=rows,
+                    cols=cols,
+                    switch_type_name=switch_type_name,
+                    split=split,
+                    split_distance=split_distance,
+                    separate_halves=separate_halves
+                )
+        else:
+            # Pure custom layout
+            layout = cls(
+                custom_keys=data.get('keys', []),
+                switch_type_name=switch_type_name,
+                split=split,
+                split_distance=split_distance,
+                separate_halves=separate_halves
+            )
+        
+        # Override key spacing if provided
+        if 'key_spacing' in data:
+            layout.key_spacing = data['key_spacing']
+        
+        return layout
+    
+    def save_yaml(self, filename):
+        """
+        Save the layout to a YAML file.
+        
+        Args:
+            filename: Path to save the YAML file
+        """
+        with open(filename, 'w') as f:
+            yaml.dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
+    
+    @classmethod
+    def load_yaml(cls, filename):
+        """
+        Load a layout from a YAML file.
+        
+        Args:
+            filename: Path to the YAML file
+            
+        Returns:
+            KeyboardLayout: New KeyboardLayout instance
+        """
+        with open(filename, 'r') as f:
+            data = yaml.safe_load(f)
+        return cls.from_dict(data)
 
 
 class CaseGenerator:

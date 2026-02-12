@@ -1,2 +1,6 @@
 # Requirements for gen-keeb-case proof of concept
 # No external dependencies needed for basic POC - uses only standard library
+
+# Image detection and YAML serialization
+opencv-python>=4.8.0
+PyYAML>=6.0

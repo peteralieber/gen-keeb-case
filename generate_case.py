@@ -13,6 +13,40 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate OpenSCAD model for a mechanical keyboard case"
     )
+    
+    # Input options
+    input_group = parser.add_mutually_exclusive_group()
+    input_group.add_argument(
+        "--import-yaml",
+        help="Import keyboard layout from a YAML file"
+    )
+    input_group.add_argument(
+        "--image",
+        help="Detect keyboard layout from a top-down image"
+    )
+    
+    # Image detection options
+    parser.add_argument(
+        "--reference-spacing",
+        type=float,
+        help="Known spacing between keys in pixels (for image detection)"
+    )
+    parser.add_argument(
+        "--visualize",
+        action="store_true",
+        help="Visualize detected keys from image"
+    )
+    parser.add_argument(
+        "--save-yaml",
+        help="Save detected layout to YAML file (used with --image)"
+    )
+    parser.add_argument(
+        "--auto-correct-rotation",
+        action="store_true",
+        help="Automatically detect and correct image rotation (used with --image)"
+    )
+    
+    # Manual layout options (used when not importing)
     parser.add_argument(
         "--rows",
         type=int,
@@ -31,6 +65,8 @@ def main():
         default="cherry_mx",
         help="Type of mechanical switch (default: cherry_mx)"
     )
+    
+    # Case parameters
     parser.add_argument(
         "--wall-thickness",
         type=float,
@@ -49,6 +85,8 @@ def main():
         default=8.0,
         help="Clearance above switches in mm (default: 8.0)"
     )
+    
+    # Output options
     parser.add_argument(
         "--optimization",
         choices=['render', 'surface'],
@@ -66,12 +104,48 @@ def main():
     
     args = parser.parse_args()
     
-    # Create layout
-    layout = KeyboardLayout(
-        rows=args.rows,
-        cols=args.cols,
-        switch_type_name=args.switch_type
-    )
+    # Create layout based on input method
+    if args.import_yaml:
+        # Import from YAML file
+        print(f"Importing layout from {args.import_yaml}...")
+        layout = KeyboardLayout.load_yaml(args.import_yaml)
+        print(f"  Loaded layout with {len(layout.custom_keys)} keys")
+        
+    elif args.image:
+        # Detect from image
+        print(f"Detecting keyboard layout from image: {args.image}")
+        
+        from gen_keeb_case.image_detector import detect_keyboard_from_image
+        
+        # Detect layout from image
+        layout_dict = detect_keyboard_from_image(
+            args.image,
+            switch_type_name=args.switch_type,
+            reference_spacing_px=args.reference_spacing,
+            visualize=args.visualize,
+            output_vis_path=args.output.replace('.scad', '_detection.png') if args.visualize else None,
+            auto_correct_rotation=args.auto_correct_rotation
+        )
+        
+        print(f"  Detected {len(layout_dict['keys'])} keys")
+        
+        # Save to YAML if requested
+        if args.save_yaml:
+            import yaml
+            with open(args.save_yaml, 'w') as f:
+                yaml.dump(layout_dict, f, default_flow_style=False, sort_keys=False)
+            print(f"  Layout saved to {args.save_yaml}")
+        
+        # Create layout from detected data
+        layout = KeyboardLayout.from_dict(layout_dict)
+        
+    else:
+        # Create manual grid layout
+        layout = KeyboardLayout(
+            rows=args.rows,
+            cols=args.cols,
+            switch_type_name=args.switch_type
+        )
     
     # Create generator
     generator = CaseGenerator(
@@ -83,8 +157,11 @@ def main():
     )
     
     # Generate and save
-    print(f"Generating keyboard case:")
-    print(f"  Layout: {args.rows} rows x {args.cols} columns")
+    print(f"\nGenerating keyboard case:")
+    if layout.rows and layout.cols:
+        print(f"  Layout: {layout.rows} rows x {layout.cols} columns")
+    else:
+        print(f"  Layout: Custom ({len(layout.custom_keys)} keys)")
     print(f"  Switch type: {layout.switch_type.name}")
     print(f"  Dimensions: {layout.get_dimensions()[0]:.2f}mm x {layout.get_dimensions()[1]:.2f}mm")
     print(f"  Optimization: {args.optimization}")
