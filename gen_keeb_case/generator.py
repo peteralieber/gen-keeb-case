@@ -202,6 +202,9 @@ class CaseGenerator:
     # Valid optimization methods for SCAD generation
     VALID_OPTIMIZATION_METHODS = ['render', 'surface']
     
+    # Height map margin in mm (added to dimensions for surface optimization)
+    HEIGHTMAP_MARGIN = 10  # 5mm margin on each side
+    
     def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0, 
                  optimization_method='render'):
         """
@@ -306,6 +309,7 @@ class CaseGenerator:
             scad_code.append(f"    scale([1, 1, base_height + 2])")
             scad_code.append(f"        surface(file = \"switch_plate_heightmap.dat\", center = false, invert = true);")
             scad_code.append("}")
+            scad_code.append("")
         else:
             # Generate switch plate with individual cubes (for render method)
             scad_code.append("module switch_plate() {")
@@ -620,9 +624,11 @@ class CaseGenerator:
             else:
                 # For rotated keys, approximate with a larger square
                 # This is a simplification; proper rotation would require matrix math
+                # Using sqrt(2)/2 ≈ 0.707 as the radius to encompass a rotated square
                 center_x = key_x + cutout_size / 2
                 center_y = key_y + cutout_size / 2
-                radius = cutout_size * 0.7  # Approximate diagonal
+                import math
+                radius = cutout_size * math.sqrt(2) / 2  # Diagonal half-length for rotated square
                 
                 x_start = int((center_x - radius) / resolution)
                 x_end = int((center_x + radius) / resolution)
@@ -666,8 +672,8 @@ class CaseGenerator:
                         left_keys,
                         left_offset_x,
                         left_offset_y,
-                        left_width + 10,
-                        left_height + 10
+                        left_width + self.HEIGHTMAP_MARGIN,
+                        left_height + self.HEIGHTMAP_MARGIN
                     )
                     with open(left_heightmap_filename, 'w') as f:
                         f.write(left_heightmap_content)
@@ -683,8 +689,8 @@ class CaseGenerator:
                         right_keys,
                         right_offset_x,
                         right_offset_y,
-                        right_width + 10,
-                        right_height + 10
+                        right_width + self.HEIGHTMAP_MARGIN,
+                        right_height + self.HEIGHTMAP_MARGIN
                     )
                     with open(right_heightmap_filename, 'w') as f:
                         f.write(right_heightmap_content)
@@ -698,8 +704,8 @@ class CaseGenerator:
                 offset_x, offset_y = self.layout.get_offset()
                 
                 # Add margins like in SCAD generation
-                width_with_margin = width + 10  # 5mm margin on each side
-                height_with_margin = height + 10
+                width_with_margin = width + self.HEIGHTMAP_MARGIN
+                height_with_margin = height + self.HEIGHTMAP_MARGIN
                 
                 heightmap_content = self._generate_heightmap_dat(
                     self.layout.custom_keys,
