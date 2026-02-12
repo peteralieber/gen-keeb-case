@@ -810,32 +810,32 @@ class CaseGenerator:
         
         return "\n".join(dat_lines)
     
-    def saveScad(self, filename, heightMapFilename=None):
+    def saveScad(self, filename, heightmap_filename=None):
         """
         Save the generated OpenSCAD code to a file.
         
         Args:
             filename: Path to save the SCAD file
-            heightMapFilename: Optional filename for heightmap. If provided, saves heightmap
+            heightmap_filename: Optional filename for heightmap. If provided, saves heightmap
                              and updates SCAD to use that filename. Only applicable when
                              optimization_method='surface'.
         """
         # Generate SCAD code with optional custom heightmap filename
-        scad_code = self.generate_scad(heightmap_filename=heightMapFilename)
+        scad_code = self.generate_scad(heightmap_filename=heightmap_filename)
         
         with open(filename, 'w') as f:
             f.write(scad_code)
         print(f"Generated OpenSCAD file: {filename}")
         
-        # If heightMapFilename is provided and using surface method, save the heightmap
-        if heightMapFilename and self.optimization_method == 'surface':
+        # If heightmap_filename is provided and using surface method, save the heightmap
+        if heightmap_filename and self.optimization_method == 'surface':
             import os
-            # If heightMapFilename is just a filename (not a path), save it in the same directory as the SCAD file
-            if not os.path.dirname(heightMapFilename):
+            # If heightmap_filename is just a filename (not a path), save it in the same directory as the SCAD file
+            if not os.path.dirname(heightmap_filename):
                 base_dir = os.path.dirname(filename) or '.'
-                heightmap_path = os.path.join(base_dir, heightMapFilename)
+                heightmap_path = os.path.join(base_dir, heightmap_filename)
             else:
-                heightmap_path = heightMapFilename
+                heightmap_path = heightmap_filename
             self.saveHeightMap(heightmap_path)
     
     def saveHeightMap(self, filename):
