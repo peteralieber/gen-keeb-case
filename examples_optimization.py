@@ -30,7 +30,10 @@ def generate_optimization_examples():
     # Generate with surface() optimization (creates height map)
     print("2. Generating with surface() optimization (with height map)...")
     generator_surface = CaseGenerator(layout=layout, optimization_method='surface')
-    generator_surface.saveScad("examples/optimization_surface.scad", "switch_plate_heightmap.dat")
+    # Note: When using surface optimization without explicit heightmap_filename,
+    # the heightmap is not automatically saved. Use export() or provide heightmap_filename.
+    generator_surface.saveScad("examples/optimization_surface.scad")
+    generator_surface.saveHeightMap("examples/switch_plate_heightmap.dat")
     
     print()
     print("✓ All optimization examples generated!")
