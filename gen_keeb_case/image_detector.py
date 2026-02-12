@@ -40,10 +40,118 @@ class KeyboardImageDetector:
         
         # Convert to grayscale
         self.gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+    
+    def detect_image_rotation(self, keys=None):
+        """
+        Detect the overall rotation angle of the keyboard in the image.
         
-    def detect_keys(self, min_area=100, max_area=10000, aspect_ratio_range=(0.7, 1.3)):
+        This is useful when the keyboard photo is tilted. The function
+        calculates the median rotation of detected keys to estimate the
+        overall image rotation.
+        
+        Args:
+            keys: List of detected keys. If None, uses self.keys
+            
+        Returns:
+            float: Estimated image rotation angle in degrees
+        """
+        if keys is None:
+            keys = self.keys
+        
+        if not keys or len(keys) < 3:
+            return 0.0
+        
+        # Get rotation angles from all keys
+        rotations = [key['rotation'] for key in keys]
+        
+        # Use median to be robust against outliers (intentionally rotated keys)
+        median_rotation = float(np.median(rotations))
+        
+        return median_rotation
+    
+    def correct_image_rotation(self, angle):
+        """
+        Rotate the image to correct for camera tilt.
+        
+        Args:
+            angle: Rotation angle in degrees (positive = counterclockwise)
+        """
+        if self.image is None:
+            self.load_image()
+        
+        # Get image dimensions
+        height, width = self.image.shape[:2]
+        
+        # Calculate rotation matrix
+        center = (width / 2, height / 2)
+        rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+        
+        # Calculate new image size to avoid cropping
+        cos = abs(rotation_matrix[0, 0])
+        sin = abs(rotation_matrix[0, 1])
+        new_width = int(height * sin + width * cos)
+        new_height = int(height * cos + width * sin)
+        
+        # Adjust rotation matrix for new size
+        rotation_matrix[0, 2] += (new_width / 2) - center[0]
+        rotation_matrix[1, 2] += (new_height / 2) - center[1]
+        
+        # Rotate image
+        self.image = cv2.warpAffine(self.image, rotation_matrix, (new_width, new_height),
+                                     flags=cv2.INTER_LINEAR,
+                                     borderMode=cv2.BORDER_CONSTANT,
+                                     borderValue=(255, 255, 255))
+        
+        # Update grayscale
+        self.gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        
+    def detect_keys(self, min_area=100, max_area=10000, aspect_ratio_range=(0.7, 1.3),
+                    auto_correct_rotation=False, rotation_threshold=2.0):
         """
         Detect key positions from the image.
+        
+        Args:
+            min_area: Minimum contour area to consider as a key
+            max_area: Maximum contour area to consider as a key
+            aspect_ratio_range: Tuple of (min, max) aspect ratio for key detection
+            auto_correct_rotation: If True, detect and correct overall image rotation
+            rotation_threshold: Minimum rotation angle (degrees) to trigger correction
+            
+        Returns:
+            list: List of detected keys with positions and rotations
+        """
+        if self.gray is None:
+            self.load_image()
+        
+        # First pass: detect keys to check for image rotation
+        if auto_correct_rotation:
+            initial_keys = self._detect_keys_internal(min_area, max_area, aspect_ratio_range)
+            
+            if len(initial_keys) >= 3:
+                image_rotation = self.detect_image_rotation(initial_keys)
+                
+                # If image is significantly rotated, correct it and re-detect
+                if abs(image_rotation) > rotation_threshold:
+                    print(f"Detected image rotation: {image_rotation:.2f}°, correcting...")
+                    # Rotate image by the detected angle to straighten keys
+                    # When keys appear rotated by angle θ in the image,
+                    # we rotate the image by θ to align them to 0°
+                    self.correct_image_rotation(image_rotation)
+                    # Re-detect on corrected image
+                    detected_keys = self._detect_keys_internal(min_area, max_area, aspect_ratio_range)
+                else:
+                    detected_keys = initial_keys
+            else:
+                detected_keys = initial_keys
+        else:
+            detected_keys = self._detect_keys_internal(min_area, max_area, aspect_ratio_range)
+        
+        self.keys = detected_keys
+        return detected_keys
+    
+    def _detect_keys_internal(self, min_area, max_area, aspect_ratio_range):
+        """
+        Internal method to perform actual key detection.
         
         Args:
             min_area: Minimum contour area to consider as a key
@@ -53,8 +161,6 @@ class KeyboardImageDetector:
         Returns:
             list: List of detected keys with positions and rotations
         """
-        if self.gray is None:
-            self.load_image()
         
         # Apply adaptive thresholding to handle varying lighting
         thresh = cv2.adaptiveThreshold(
@@ -107,7 +213,6 @@ class KeyboardImageDetector:
                 'rotation': float(angle)
             })
         
-        self.keys = detected_keys
         return detected_keys
     
     def convert_to_mm(self, reference_spacing_px=None):
@@ -255,18 +360,19 @@ class KeyboardImageDetector:
         
         return None
     
-    def create_layout_dict(self, reference_spacing_px=None):
+    def create_layout_dict(self, reference_spacing_px=None, auto_correct_rotation=False):
         """
         Create a complete layout dictionary from the detected keys.
         
         Args:
             reference_spacing_px: Known spacing between keys in pixels
+            auto_correct_rotation: If True, detect and correct overall image rotation
             
         Returns:
             dict: Layout dictionary compatible with KeyboardLayout.from_dict()
         """
         if not self.keys:
-            self.detect_keys()
+            self.detect_keys(auto_correct_rotation=auto_correct_rotation)
         
         # Convert to mm and normalize
         keys_mm = self.convert_to_mm(reference_spacing_px)
@@ -332,7 +438,8 @@ class KeyboardImageDetector:
 
 def detect_keyboard_from_image(image_path, switch_type_name="cherry_mx", 
                                key_spacing=19.05, reference_spacing_px=None,
-                               visualize=False, output_vis_path=None):
+                               visualize=False, output_vis_path=None,
+                               auto_correct_rotation=False):
     """
     High-level function to detect keyboard layout from an image.
     
@@ -343,12 +450,13 @@ def detect_keyboard_from_image(image_path, switch_type_name="cherry_mx",
         reference_spacing_px: Known spacing between keys in pixels
         visualize: Whether to visualize the detection
         output_vis_path: Path to save visualization
+        auto_correct_rotation: If True, detect and correct overall image rotation
         
     Returns:
         dict: Layout dictionary compatible with KeyboardLayout.from_dict()
     """
     detector = KeyboardImageDetector(image_path, switch_type_name, key_spacing)
-    layout_dict = detector.create_layout_dict(reference_spacing_px)
+    layout_dict = detector.create_layout_dict(reference_spacing_px, auto_correct_rotation)
     
     if visualize:
         detector.visualize_detection(output_vis_path)

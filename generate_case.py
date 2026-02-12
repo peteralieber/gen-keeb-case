@@ -40,6 +40,11 @@ def main():
         "--save-yaml",
         help="Save detected layout to YAML file (used with --image)"
     )
+    parser.add_argument(
+        "--auto-correct-rotation",
+        action="store_true",
+        help="Automatically detect and correct image rotation (used with --image)"
+    )
     
     # Manual layout options (used when not importing)
     parser.add_argument(
@@ -110,7 +115,8 @@ def main():
             switch_type_name=args.switch_type,
             reference_spacing_px=args.reference_spacing,
             visualize=args.visualize,
-            output_vis_path=args.output.replace('.scad', '_detection.png') if args.visualize else None
+            output_vis_path=args.output.replace('.scad', '_detection.png') if args.visualize else None,
+            auto_correct_rotation=args.auto_correct_rotation
         )
         
         print(f"  Detected {len(layout_dict['keys'])} keys")
