@@ -199,6 +199,9 @@ class KeyboardLayout:
 class CaseGenerator:
     """Generate OpenSCAD code for keyboard cases."""
     
+    # Valid optimization methods for SCAD generation
+    VALID_OPTIMIZATION_METHODS = ['none', 'render', 'surface']
+    
     def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0, 
                  optimization_method='none'):
         """
@@ -213,7 +216,7 @@ class CaseGenerator:
                                 Options: 'none', 'render', 'surface'
                                 - 'none': No optimization (default)
                                 - 'render': Use render() to pre-compute geometry (faster for many keys)
-                                - 'surface': Use surface() to convert to surface representation
+                                - 'surface': Use surface() wrapper (experimental, may not work as expected)
         """
         self.layout = layout
         self.wall_thickness = wall_thickness
@@ -222,10 +225,9 @@ class CaseGenerator:
         self.optimization_method = optimization_method
         
         # Validate optimization method
-        valid_methods = ['none', 'render', 'surface']
-        if optimization_method not in valid_methods:
+        if optimization_method not in self.VALID_OPTIMIZATION_METHODS:
             raise ValueError(f"Invalid optimization_method: {optimization_method}. "
-                           f"Must be one of: {', '.join(valid_methods)}")
+                           f"Must be one of: {', '.join(self.VALID_OPTIMIZATION_METHODS)}")
         
     def generate_scad(self):
         """Generate the complete OpenSCAD code."""

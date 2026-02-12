@@ -2,6 +2,7 @@
 // Layout: Custom (30 keys total)
 // Switch type: Cherry MX
 // Split keyboard: separate halves
+// Optimization: none
 
 // Parameters
 left_case_width = 107.80;
