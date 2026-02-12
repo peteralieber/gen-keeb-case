@@ -85,6 +85,19 @@ Options:
 - `--reference-spacing`: Spacing between keys in pixels (helps with scale calibration)
 - `--visualize`: Show detected keys overlaid on the image
 - `--save-yaml`: Save the detected layout to a YAML file
+- `--auto-correct-rotation`: Automatically detect and correct image tilt (recommended)
+
+**Rotation Correction:**
+If your keyboard photo is tilted, use `--auto-correct-rotation` to automatically straighten it:
+- Detects the overall rotation angle from key orientations
+- Rotates the image to align keys with axes
+- Improves grid detection accuracy
+- Results in cleaner key positions and smaller output files
+
+Example with rotation correction:
+```bash
+python3 generate_case.py --image tilted_keyboard.jpg --auto-correct-rotation --visualize --output case.scad
+```
 
 ### Import Layout from YAML
 
@@ -107,9 +120,9 @@ This demonstrates YAML serialization features and creates:
 ### Complete Workflow Example
 
 1. Take a top-down photo of your keyboard
-2. Detect the layout and save to YAML:
+2. Detect the layout and save to YAML (with rotation correction):
    ```bash
-   python3 generate_case.py --image my_keyboard.jpg --reference-spacing 80 --save-yaml my_layout.yaml --visualize
+   python3 generate_case.py --image my_keyboard.jpg --reference-spacing 80 --save-yaml my_layout.yaml --visualize --auto-correct-rotation
    ```
 3. Edit the YAML file if needed to fine-tune positions
 4. Generate the case from the YAML:
