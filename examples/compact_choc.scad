@@ -1,7 +1,7 @@
 // Generated keyboard case
 // Layout: 3x10
 // Switch type: Kailh Choc
-// Optimization: none
+// Optimization: render
 
 // Parameters
 case_width = 202.45;
@@ -26,7 +26,7 @@ module keyboard_case() {
 
         // Switch cutouts
         translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
-            switch_plate();
+            render() switch_plate();
     }
 }
 

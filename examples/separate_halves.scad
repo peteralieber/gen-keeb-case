@@ -2,7 +2,7 @@
 // Layout: Custom (30 keys total)
 // Switch type: Cherry MX
 // Split keyboard: separate halves
-// Optimization: none
+// Optimization: render
 
 // Parameters
 left_case_width = 107.80;
@@ -28,7 +28,7 @@ module left_half() {
 
         // Switch cutouts
         translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
-            left_switch_plate();
+            render() left_switch_plate();
     }
 }
 
@@ -45,7 +45,7 @@ module right_half() {
 
         // Switch cutouts
         translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
-            right_switch_plate();
+            render() right_switch_plate();
     }
 }
 

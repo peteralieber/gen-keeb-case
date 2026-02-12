@@ -49,7 +49,7 @@ def generate_example_cases():
         generator = CaseGenerator(layout=layout)
         
         # Save to examples directory
-        generator.save(f"examples/{example['name']}.scad")
+        generator.saveScad(f"examples/{example['name']}.scad")
         generator.save_svg(f"examples/{example['name']}.svg")
     
     # Generate split keyboard with angled thumb keys
@@ -127,7 +127,7 @@ def generate_split_keyboard_example():
     generator = CaseGenerator(layout=layout)
     
     # Save files
-    generator.save("examples/split_keyboard_angled_thumbs.scad")
+    generator.saveScad("examples/split_keyboard_angled_thumbs.scad")
     generator.save_svg("examples/split_keyboard_angled_thumbs.svg")
 
 

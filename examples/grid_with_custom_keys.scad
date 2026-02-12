@@ -1,6 +1,7 @@
 // Generated keyboard case
 // Layout: 3x6
 // Switch type: Cherry MX
+// Optimization: render
 
 // Parameters
 case_width = 126.85;
@@ -25,7 +26,7 @@ module keyboard_case() {
 
         // Switch cutouts
         translate([wall_thickness + 5 - 0.00, wall_thickness + 5 - 0.00, -1])
-            switch_plate();
+            render() switch_plate();
     }
 }
 

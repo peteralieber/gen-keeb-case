@@ -25,12 +25,12 @@ def generate_optimization_examples():
     # Generate with render() optimization (default)
     print("1. Generating with render() optimization...")
     generator_render = CaseGenerator(layout=layout, optimization_method='render')
-    generator_render.save("examples/optimization_render.scad")
+    generator_render.saveScad("examples/optimization_render.scad")
     
     # Generate with surface() optimization (creates height map)
     print("2. Generating with surface() optimization (with height map)...")
     generator_surface = CaseGenerator(layout=layout, optimization_method='surface')
-    generator_surface.save("examples/optimization_surface.scad")
+    generator_surface.saveScad("examples/optimization_surface.scad", "switch_plate_heightmap.dat")
     
     print()
     print("✓ All optimization examples generated!")
