@@ -49,7 +49,7 @@ def example_yaml_import():
     # Generate case from imported layout
     generator = CaseGenerator(layout=layout)
     output_scad = "examples/60_percent_from_yaml.scad"
-    generator.save(output_scad)
+    generator.saveScad(output_scad)
     print(f"Generated case: {output_scad}")
 
 
@@ -113,7 +113,7 @@ def example_custom_layout():
     # Generate case
     generator = CaseGenerator(layout=layout)
     scad_file = "examples/custom_split_case.scad"
-    generator.save(scad_file)
+    generator.saveScad(scad_file)
     print(f"Generated: {scad_file}")
     
     # Show a sample of the YAML
@@ -153,17 +153,17 @@ def example_programmatic_workflow():
     
     # Standard case
     gen1 = CaseGenerator(loaded_layout, wall_thickness=3.0)
-    gen1.save("examples/compact_standard.scad")
+    gen1.saveScad("examples/compact_standard.scad")
     print("  - Standard case: examples/compact_standard.scad")
     
     # Thin-walled case
     gen2 = CaseGenerator(loaded_layout, wall_thickness=2.0, base_height=8.0)
-    gen2.save("examples/compact_thin.scad")
+    gen2.saveScad("examples/compact_thin.scad")
     print("  - Thin-walled case: examples/compact_thin.scad")
     
     # Tall case
     gen3 = CaseGenerator(loaded_layout, base_height=15.0, top_clearance=10.0)
-    gen3.save("examples/compact_tall.scad")
+    gen3.saveScad("examples/compact_tall.scad")
     print("  - Tall case: examples/compact_tall.scad")
     
     print("\nWorkflow complete! All files saved to examples/")

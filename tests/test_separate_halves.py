@@ -42,7 +42,7 @@ def test_separate_halves():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/separate_halves.scad")
+    generator.saveScad("examples/separate_halves.scad")
     print(f"✓ Generated separate halves with {len(layout.custom_keys)} keys")
 
 

@@ -27,7 +27,7 @@ def example_1_grid_with_custom_keys():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/grid_with_custom_keys.scad")
+    generator.saveScad("examples/grid_with_custom_keys.scad")
     generator.save_svg("examples/grid_with_custom_keys.svg")
     print(f"  Generated with {len(layout.custom_keys)} keys (18 grid + 3 custom)")
 
@@ -67,7 +67,7 @@ def example_2_split_keyboard_unified():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/split_keyboard_unified.scad")
+    generator.saveScad("examples/split_keyboard_unified.scad")
     generator.save_svg("examples/split_keyboard_unified.svg")
     print(f"  Generated with {len(layout.custom_keys)} keys")
 
@@ -115,7 +115,7 @@ def example_3_split_with_both_halves_copy():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/split_keyboard_copied_thumbs.scad")
+    generator.saveScad("examples/split_keyboard_copied_thumbs.scad")
     print(f"  Generated with {len(layout.custom_keys)} keys (includes copied thumbs)")
 
 
@@ -161,7 +161,7 @@ def example_4_split_with_both_halves_mirror():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/split_keyboard_mirrored_thumbs.scad")
+    generator.saveScad("examples/split_keyboard_mirrored_thumbs.scad")
     generator.save_svg("examples/split_keyboard_mirrored_thumbs.svg")
     print(f"  Generated with {len(layout.custom_keys)} keys (includes mirrored thumbs)")
 
@@ -209,7 +209,7 @@ def example_5_separate_halves():
     )
     
     generator = CaseGenerator(layout=layout)
-    generator.save("examples/separate_halves_with_thumbs.scad")
+    generator.saveScad("examples/separate_halves_with_thumbs.scad")
     print(f"  Generated with {len(layout.custom_keys)} keys (separate left & right)")
 
 

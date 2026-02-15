@@ -338,7 +338,7 @@ class CaseGenerator:
     HEIGHTMAP_MARGIN = 10  # 5mm margin on each side
     
     def __init__(self, layout, wall_thickness=3.0, base_height=10.0, top_clearance=8.0, 
-                 optimization_method='render'):
+                 optimization_method='render', name='keyboard_case'):
         """
         Initialize a case generator.
         
@@ -351,35 +351,51 @@ class CaseGenerator:
                                 Options: 'render', 'surface'
                                 - 'render': Use render() to pre-compute geometry (default, faster for many keys)
                                 - 'surface': Generate height map and use surface() to read it (experimental)
+            name: Name prefix for exported files
         """
         self.layout = layout
         self.wall_thickness = wall_thickness
         self.base_height = base_height
         self.top_clearance = top_clearance
         self.optimization_method = optimization_method
+        self.name = name
         
         # Validate optimization method
         if optimization_method not in self.VALID_OPTIMIZATION_METHODS:
             raise ValueError(f"Invalid optimization_method: {optimization_method}. "
                            f"Must be one of: {', '.join(self.VALID_OPTIMIZATION_METHODS)}")
         
-    def generate_scad(self):
-        """Generate the complete OpenSCAD code."""
+    def generate_scad(self, heightmap_filename=None):
+        """
+        Generate the complete OpenSCAD code.
+        
+        Args:
+            heightmap_filename: Optional custom filename for heightmap (only used with surface optimization)
+        """
         if self.layout.separate_halves and self.layout.split:
             # Generate two separate cases
-            return self._generate_separate_halves_scad()
+            return self._generate_separate_halves_scad(heightmap_filename=heightmap_filename)
         else:
             # Generate single unified case
-            return self._generate_unified_scad()
+            return self._generate_unified_scad(heightmap_filename=heightmap_filename)
     
-    def _generate_unified_scad(self):
-        """Generate OpenSCAD code for a unified case."""
+    def _generate_unified_scad(self, heightmap_filename=None):
+        """
+        Generate OpenSCAD code for a unified case.
+        
+        Args:
+            heightmap_filename: Optional custom filename for heightmap (only used with surface optimization)
+        """
         width, height = self.layout.get_dimensions()
         
         # Add margins for walls
         case_width = width + 2 * self.wall_thickness + 10  # 5mm margin on each side
         case_height = height + 2 * self.wall_thickness + 10
         case_depth = self.base_height + self.top_clearance
+        
+        # Use provided heightmap filename or default
+        if heightmap_filename is None:
+            heightmap_filename = 'switch_plate_heightmap.dat'
         
         scad_code = []
         scad_code.append("// Generated keyboard case")
@@ -437,9 +453,9 @@ class CaseGenerator:
             # Generate switch plate using surface from height map
             scad_code.append("module switch_plate() {")
             scad_code.append("    // Switch cutouts using height map surface")
-            scad_code.append(f"    // Height map file: switch_plate_heightmap.dat")
+            scad_code.append(f"    // Height map file: {heightmap_filename}")
             scad_code.append(f"    scale([1, 1, base_height + 2])")
-            scad_code.append(f"        surface(file = \"switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append(f"        surface(file = \"{heightmap_filename}\", center = false, invert = true);")
             scad_code.append("}")
             scad_code.append("")
         else:
@@ -471,8 +487,25 @@ class CaseGenerator:
         
         return "\n".join(scad_code)
     
-    def _generate_separate_halves_scad(self):
-        """Generate OpenSCAD code for separate left and right halves."""
+    def _generate_separate_halves_scad(self, heightmap_filename=None):
+        """
+        Generate OpenSCAD code for separate left and right halves.
+        
+        Args:
+            heightmap_filename: Optional base filename for heightmaps (only used with surface optimization).
+                              Will generate <base>_left.dat and <base>_right.dat files.
+        """
+        # Use provided heightmap filename or default
+        if heightmap_filename is None:
+            left_heightmap_filename = 'left_switch_plate_heightmap.dat'
+            right_heightmap_filename = 'right_switch_plate_heightmap.dat'
+        else:
+            # Extract base and extension
+            import os
+            base, ext = os.path.splitext(heightmap_filename)
+            left_heightmap_filename = f"{base}_left{ext}"
+            right_heightmap_filename = f"{base}_right{ext}"
+        
         left_keys = [k for k in self.layout.custom_keys if k.get('half') != 'right']
         right_keys = [k for k in self.layout.custom_keys if k.get('half') != 'left']
         
@@ -568,9 +601,9 @@ class CaseGenerator:
         if self.optimization_method == 'surface':
             scad_code.append("module left_switch_plate() {")
             scad_code.append("    // Switch cutouts using height map surface")
-            scad_code.append(f"    // Height map file: left_switch_plate_heightmap.dat")
+            scad_code.append(f"    // Height map file: {left_heightmap_filename}")
             scad_code.append(f"    scale([1, 1, base_height + 2])")
-            scad_code.append(f"        surface(file = \"left_switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append(f"        surface(file = \"{left_heightmap_filename}\", center = false, invert = true);")
             scad_code.append("}")
         else:
             scad_code.append("module left_switch_plate() {")
@@ -596,9 +629,9 @@ class CaseGenerator:
         if self.optimization_method == 'surface':
             scad_code.append("module right_switch_plate() {")
             scad_code.append("    // Switch cutouts using height map surface")
-            scad_code.append(f"    // Height map file: right_switch_plate_heightmap.dat")
+            scad_code.append(f"    // Height map file: {right_heightmap_filename}")
             scad_code.append(f"    scale([1, 1, base_height + 2])")
-            scad_code.append(f"        surface(file = \"right_switch_plate_heightmap.dat\", center = false, invert = true);")
+            scad_code.append(f"        surface(file = \"{right_heightmap_filename}\", center = false, invert = true);")
             scad_code.append("}")
         else:
             scad_code.append("module right_switch_plate() {")
@@ -777,78 +810,172 @@ class CaseGenerator:
         
         return "\n".join(dat_lines)
     
-    def save(self, filename):
-        """Save the generated OpenSCAD code to a file."""
+    def saveScad(self, filename, heightmap_filename=None):
+        """
+        Save the generated OpenSCAD code to a file.
+        
+        Args:
+            filename: Path to save the SCAD file
+            heightmap_filename: Optional filename for heightmap. If provided, saves heightmap
+                             and updates SCAD to use that filename. Only applicable when
+                             optimization_method='surface'.
+        """
+        # Generate SCAD code with optional custom heightmap filename
+        scad_code = self.generate_scad(heightmap_filename=heightmap_filename)
+        
         with open(filename, 'w') as f:
-            f.write(self.generate_scad())
+            f.write(scad_code)
         print(f"Generated OpenSCAD file: {filename}")
         
-        # If using surface method, also generate the height map file(s)
-        if self.optimization_method == 'surface':
+        # If heightmap_filename is provided and using surface method, save the heightmap
+        if heightmap_filename and self.optimization_method == 'surface':
             import os
+            # If heightmap_filename is just a filename (not a path), save it in the same directory as the SCAD file
+            if not os.path.dirname(heightmap_filename):
+                base_dir = os.path.dirname(filename) or '.'
+                heightmap_path = os.path.join(base_dir, heightmap_filename)
+            else:
+                heightmap_path = heightmap_filename
+            self.saveHeightMap(heightmap_path)
+    
+    def saveHeightMap(self, filename):
+        """
+        Save the heightmap to a specific file.
+        
+        Args:
+            filename: Path to save the heightmap DAT file
+        """
+        import os
+        
+        if self.optimization_method != 'surface':
+            print(f"Warning: Heightmap is only used with optimization_method='surface'")
+            return
+        
+        if self.layout.separate_halves and self.layout.split:
+            # For separate halves, we need left and right heightmaps
+            # Use the filename as a base and create _left and _right versions
+            base, ext = os.path.splitext(filename)
+            left_filename = f"{base}_left{ext}"
+            right_filename = f"{base}_right{ext}"
+            
+            left_keys = [k for k in self.layout.custom_keys if k.get('half') != 'right']
+            right_keys = [k for k in self.layout.custom_keys if k.get('half') != 'left']
+            
+            if left_keys:
+                left_width, left_height = self.layout._calculate_bounding_box(left_keys)
+                left_offset_x = min(key['x'] for key in left_keys)
+                left_offset_y = min(key['y'] for key in left_keys)
+                
+                left_heightmap_content = self._generate_heightmap_dat(
+                    left_keys,
+                    left_offset_x,
+                    left_offset_y,
+                    left_width + self.HEIGHTMAP_MARGIN,
+                    left_height + self.HEIGHTMAP_MARGIN
+                )
+                with open(left_filename, 'w') as f:
+                    f.write(left_heightmap_content)
+                print(f"Generated left height map file: {left_filename}")
+            
+            if right_keys:
+                right_width, right_height = self.layout._calculate_bounding_box(right_keys)
+                right_offset_x = min(key['x'] for key in right_keys)
+                right_offset_y = min(key['y'] for key in right_keys)
+                
+                right_heightmap_content = self._generate_heightmap_dat(
+                    right_keys,
+                    right_offset_x,
+                    right_offset_y,
+                    right_width + self.HEIGHTMAP_MARGIN,
+                    right_height + self.HEIGHTMAP_MARGIN
+                )
+                with open(right_filename, 'w') as f:
+                    f.write(right_heightmap_content)
+                print(f"Generated right height map file: {right_filename}")
+        else:
+            # Generate single height map for unified case
+            width, height = self.layout.get_dimensions()
+            offset_x, offset_y = self.layout.get_offset()
+            
+            # Add margins like in SCAD generation
+            width_with_margin = width + self.HEIGHTMAP_MARGIN
+            height_with_margin = height + self.HEIGHTMAP_MARGIN
+            
+            heightmap_content = self._generate_heightmap_dat(
+                self.layout.custom_keys,
+                offset_x,
+                offset_y,
+                width_with_margin,
+                height_with_margin
+            )
+            
+            with open(filename, 'w') as f:
+                f.write(heightmap_content)
+            print(f"Generated height map file: {filename}")
+    
+    def export(self, path):
+        """
+        Export all case files (SCAD, SVG, and optionally DAT) to a directory.
+        Files are named using the generator's name property as a prefix.
+        
+        Args:
+            path: Directory path where files will be saved
+        """
+        import os
+        
+        # Create directory if it doesn't exist
+        os.makedirs(path, exist_ok=True)
+        
+        # Generate file paths
+        scad_file = os.path.join(path, f"{self.name}.scad")
+        svg_file = os.path.join(path, f"{self.name}.svg")
+        
+        # Save SCAD file
+        if self.optimization_method == 'surface':
+            # Save with heightmap
+            heightmap_file = os.path.join(path, f"{self.name}_heightmap.dat")
+            # Use just the filename (not full path) in the SCAD file
+            self.saveScad(scad_file, os.path.basename(heightmap_file))
+        else:
+            # Save without heightmap
+            self.saveScad(scad_file)
+        
+        # Save SVG file
+        self.save_svg(svg_file)
+        
+        print(f"\nExported case files to: {path}")
+        print(f"  - {os.path.basename(scad_file)}")
+        print(f"  - {os.path.basename(svg_file)}")
+        if self.optimization_method == 'surface':
+            if self.layout.separate_halves and self.layout.split:
+                print(f"  - {self.name}_heightmap_left.dat")
+                print(f"  - {self.name}_heightmap_right.dat")
+            else:
+                print(f"  - {self.name}_heightmap.dat")
+    
+    def save(self, filename):
+        """
+        Deprecated: Use saveScad() instead.
+        Save the generated OpenSCAD code to a file.
+        For backward compatibility, this automatically saves heightmap files when using surface optimization.
+        """
+        import os
+        import warnings
+        warnings.warn("save() is deprecated, use saveScad() instead", DeprecationWarning, stacklevel=2)
+        
+        # For backward compatibility, automatically save heightmap files
+        if self.optimization_method == 'surface':
             base_dir = os.path.dirname(filename) or '.'
             
             if self.layout.separate_halves and self.layout.split:
-                # Generate separate height maps for left and right halves
-                left_keys = [k for k in self.layout.custom_keys if k.get('half') != 'right']
-                right_keys = [k for k in self.layout.custom_keys if k.get('half') != 'left']
-                
-                if left_keys:
-                    left_width, left_height = self.layout._calculate_bounding_box(left_keys)
-                    left_offset_x = min(key['x'] for key in left_keys)
-                    left_offset_y = min(key['y'] for key in left_keys)
-                    
-                    left_heightmap_filename = os.path.join(base_dir, 'left_switch_plate_heightmap.dat')
-                    left_heightmap_content = self._generate_heightmap_dat(
-                        left_keys,
-                        left_offset_x,
-                        left_offset_y,
-                        left_width + self.HEIGHTMAP_MARGIN,
-                        left_height + self.HEIGHTMAP_MARGIN
-                    )
-                    with open(left_heightmap_filename, 'w') as f:
-                        f.write(left_heightmap_content)
-                    print(f"Generated left height map file: {left_heightmap_filename}")
-                
-                if right_keys:
-                    right_width, right_height = self.layout._calculate_bounding_box(right_keys)
-                    right_offset_x = min(key['x'] for key in right_keys)
-                    right_offset_y = min(key['y'] for key in right_keys)
-                    
-                    right_heightmap_filename = os.path.join(base_dir, 'right_switch_plate_heightmap.dat')
-                    right_heightmap_content = self._generate_heightmap_dat(
-                        right_keys,
-                        right_offset_x,
-                        right_offset_y,
-                        right_width + self.HEIGHTMAP_MARGIN,
-                        right_height + self.HEIGHTMAP_MARGIN
-                    )
-                    with open(right_heightmap_filename, 'w') as f:
-                        f.write(right_heightmap_content)
-                    print(f"Generated right height map file: {right_heightmap_filename}")
+                # Use default filenames for separate halves
+                self.saveScad(filename, 'left_switch_plate_heightmap.dat')
             else:
-                # Generate single height map for unified case
-                heightmap_filename = os.path.join(base_dir, 'switch_plate_heightmap.dat')
-                
-                # Get dimensions and offset for height map
-                width, height = self.layout.get_dimensions()
-                offset_x, offset_y = self.layout.get_offset()
-                
-                # Add margins like in SCAD generation
-                width_with_margin = width + self.HEIGHTMAP_MARGIN
-                height_with_margin = height + self.HEIGHTMAP_MARGIN
-                
-                heightmap_content = self._generate_heightmap_dat(
-                    self.layout.custom_keys,
-                    offset_x,
-                    offset_y,
-                    width_with_margin,
-                    height_with_margin
-                )
-                
-                with open(heightmap_filename, 'w') as f:
-                    f.write(heightmap_content)
-                print(f"Generated height map file: {heightmap_filename}")
+                # Use default filename for unified case
+                heightmap_file = os.path.join(base_dir, 'switch_plate_heightmap.dat')
+                self.saveScad(filename, os.path.basename(heightmap_file))
+        else:
+            self.saveScad(filename)
     
     def save_svg(self, filename):
         """Save the generated SVG top-down view to a file."""
